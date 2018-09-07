@@ -6,9 +6,9 @@ A MS-DOS QuickBASIC/QBasic-like IDE for Visual Basic code that's powered by the 
 
 Welcome to the QuickVB project page! 
 
-On the 50th anniversary of BASIC, the members of the Microsoft Visual Basic team released a fun sample - it looks like QuickBASIC/QBasic, but it's a .NET console app that lets you write modern Visual Basic code. QuickVB shows off several APIs from the [.NET Compiler Platform ("Roslyn")](https://github.com/dotnet/roslyn/), which where they've been reimplementing the Visual Basic compiler in Visual Basic itself.
+On the 50th anniversary of BASIC, the members of the Microsoft Visual Basic team released a fun sample - it looks like QuickBASIC/QBasic, but it's a .NET console app that lets you write modern Visual Basic code. QuickVB shows off several APIs from the [.NET Compiler Platform ("Roslyn")](https://github.com/dotnet/roslyn/), which is where they've reimplemented the Visual Basic compiler in Visual Basic itself.
 
-Since the original post, they had enough feedback that they decided to develop QuickVB further as an open-source project! (This was done using CodePlex - which has since been "shutdown".)
+Since the original post, they had enough feedback that they decided to release QuickVB as an open-source project! (This was done using CodePlex - which has since been "shutdown".)
 
 There's a lot of work left to be done to turn this sample into an environment (IDE) where you can really spend some quality time! Some key features that are left: 
 
@@ -17,7 +17,7 @@ There's a lot of work left to be done to turn this sample into an environment (I
 * General perf improvements when working on multi-file programs like the QuickVB solution itself
 * QuickBasic compatibility library, to ease porting of classic programs like GORILLA.BAS (WIP)
 
-This is where this project comes in; it serves to continue this effort...
+This is where this GitHub project comes in; it serves to re-ignite and continue this effort...
 
 * Migrate from being a "demo" to a full-featured (for a Console app) IDE
 * Match menus and other UI elements to original QuickBASIC IDE (WIP)
