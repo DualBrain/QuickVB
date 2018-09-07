@@ -1,14 +1,12 @@
 # QuickVB
 
-A MS-DOS QuickBASIC/QBasic-like IDE for Visual Basic code that's powered by the  [https://github.com/dotnet/roslyn/](.NET Compiler Platform ("Roslyn")).
-
-[AddressOf](http://addressof.com)
+A MS-DOS QuickBASIC/QBasic-like IDE for Visual Basic code that's powered by the [.NET Compiler Platform ("Roslyn")](https://github.com/dotnet/roslyn/).
 
 (NOTE: The following needs to be updated.)
 
 # Welcome
 
-Welcome to the QuickVB project page! On the 50th anniversary of BASIC, we released a fun sample we'd written on the Visual Basic team - it looks like QuickBasic, but it's a .NET console app that lets you write modern Visual Basic code. QuickVB shows off APIs from the .NET Compiler Platform ("Roslyn"), where we've been reimplementing the Visual Basic compiler in Visual Basic itself.
+Welcome to the QuickVB project page! On the 50th anniversary of BASIC, we released a fun sample we'd written on the Visual Basic team - it looks like QuickBASIC/QBasic, but it's a .NET console app that lets you write modern Visual Basic code. QuickVB shows off APIs from the [.NET Compiler Platform ("Roslyn")](https://github.com/dotnet/roslyn/), where we've been reimplementing the Visual Basic compiler in Visual Basic itself.
 
 Since the post, we've seen such a great reaction that we've decided to develop QuickVB further as an open-source project!
 
@@ -29,7 +27,7 @@ Or, just clone the Git repository:
 
 # QuickVB Features
 
-All of the features below are powered by the .NET Compiler Platform ("Roslyn") APIs. To see them light up, click Enable Roslyn on the Options menu.
+All of the features below are powered by the [.NET Compiler Platform ("Roslyn")](https://github.com/dotnet/roslyn/) APIs. To see them light up, click *Enable Roslyn* on the *Options* menu.
 
 Semantic code colorization (powered by Roslyn's Classification API):
 
