@@ -590,12 +590,11 @@
         End If
       Case 1 ' 320x200 (25 rows, 40 columns)
         If m_window Is Nothing Then
-          m_window = New System.Windows.Forms.Form()
-          m_window.Text = Nothing
-          m_window.FormBorderStyle = Windows.Forms.FormBorderStyle.None
-          m_window.Width = 320
-          m_window.Height = 200
-          m_window.BackColor = System.Drawing.Color.FromArgb(255, 0, 0, 0)
+          m_window = New System.Windows.Forms.Form With {.Text = Nothing,
+                                                         .FormBorderStyle = Windows.Forms.FormBorderStyle.None,
+                                                         .Width = 320,
+                                                         .Height = 200,
+                                                         .BackColor = System.Drawing.Color.FromArgb(255, 0, 0, 0)}
         End If
         m_window.Show()
       Case Else
