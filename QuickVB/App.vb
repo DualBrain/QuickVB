@@ -11,6 +11,8 @@ Imports System.ComponentModel.Composition.Hosting
 Imports System.IO
 Imports System.Windows.Forms
 
+Imports Microsoft.CodeAnalysis.Host.Mef
+
 Module App
 
   Public TheWorkspace As QuickVBWorkspace
@@ -23,10 +25,30 @@ Module App
 
   Public Sub NewUntitledWorkspace()
 
-    TheWorkspace = New QuickVBWorkspace()
+    Try
+      TheWorkspace = New QuickVBWorkspace()
+    Catch ex As ReflectionTypeLoadException
+      Dim sb = New Text.StringBuilder()
+      For Each exSub In ex.LoaderExceptions
+        sb.AppendLine(exSub.Message)
+        Dim exFileNotFound = TryCast(exSub, FileNotFoundException)
+        If exFileNotFound IsNot Nothing Then
+          If Not String.IsNullOrEmpty(exFileNotFound.FusionLog) Then
+            sb.AppendLine("Fusion Log:")
+            sb.AppendLine(exFileNotFound.FusionLog)
+          End If
+        End If
+        sb.AppendLine()
+      Next
+      Dim errorMessage = sb.ToString()
+      ' Display Or log the error based on your application.
+      MsgBox(errorMessage)
+    End Try
 
-    Dim projectId = TheWorkspace.CreateProject("Untitled", "Untitled.exe")
-    Dim documentId = TheWorkspace.CreateDocument(projectId, "Untitled.vb")
+    If TheWorkspace IsNot Nothing Then
+      Dim projectId = TheWorkspace.CreateProject("Untitled", "Untitled.exe")
+      Dim documentId = TheWorkspace.CreateDocument(projectId, "Untitled.vb")
+    End If
 
   End Sub
 

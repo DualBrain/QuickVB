@@ -18,7 +18,7 @@ Public Class DocumentTextBuffer
 
   Public ReadOnly Property Document As Document
     Get
-      Return App.TheWorkspace.CurrentSolution.GetDocument(Me.DocumentId)
+      Return App.TheWorkspace?.CurrentSolution?.GetDocument(Me.DocumentId)
     End Get
   End Property
 
