@@ -68,17 +68,37 @@
 
   ' BSAVE
 
+  ' CALL
+
+  ' ...in VB.NET.
+
   ' CDBL
 
-  ' ... in VB.NET.
+  ' ...in VB.NET.
 
   ' CHAIN
 
+  ' ...not something that can be translated easily.
+
   ' CHDIR
+
+  Public Shared Sub ChDir(directory As String)
+    If Not String.IsNullOrEmpty(directory) Then
+      If IO.Directory.Exists(directory) Then
+        System.IO.Directory.SetCurrentDirectory(directory)
+      Else
+        Throw New IO.DirectoryNotFoundException("Path not found")
+      End If
+    Else
+      Throw New ArgumentException("Expected: expression")
+    End If
+  End Sub
 
   ' CHR$
 
-  ' ... in VB.NET.
+  Public Shared Function Chr(val As Integer) As String
+    Return Microsoft.VisualBasic.Chr(val)
+  End Function
 
   ' CINT
 
@@ -96,12 +116,14 @@
 
   ' CLS
 
-  Public Shared Sub Cls()
-    Console.Clear()
-  End Sub
-
-  Public Shared Sub Cls(viewport As Integer)
+  Public Shared Sub Cls(Optional viewport As Integer? = -1)
+    If viewport Is Nothing Then
+      viewport = -1
+    End If
     Select Case viewport
+      Case -1
+        ' Clears the currently active viewport.  If neither a graphics viewport nor a text viewport is defined, the statement clears the entire screen.
+        Console.Clear()
       Case 0
         ' Clears the entire screen, regardless of the currently active viewport.
         Console.Clear()
@@ -112,7 +134,7 @@
         ' Clears the text viewport.
         Console.Clear()
       Case Else
-        Throw New ArgumentOutOfRangeException("CLS viewport must be 0, 1, or 2.")
+        Throw New ArgumentOutOfRangeException("CLS viewport must be not provided, Nothing, 0, 1, or 2.")
     End Select
   End Sub
 
@@ -139,6 +161,8 @@
   End Sub
 
   ' COMMON
+
+  ' ...not in VB.NET; see CHAIN.
 
   ' COM ON/OFF/STOP
 
@@ -172,15 +196,32 @@
 
   ' DATA
 
+  Private Shared m_data As New List(Of Object)
+  Private Shared m_readIndex As Integer = 0
+
+  Public Sub Data(ParamArray values As Object())
+    For Each value In values
+      m_data.Add(value)
+    Next
+  End Sub
+
   ' DATE$
 
   ' DECLARE 
 
+  ' ...not used in the same way as QB; general translation is to "just remove them".
+
   ' DEF FN
+
+  ' ... not something that can be translated easily.
 
   ' DEF SEG
 
+  ' ... not something that can be translated easily.
+
   ' DEF type
+
+  ' ... not something that can be translated easily.
 
   ' DIM
 
@@ -198,6 +239,8 @@
 
   ' $DYNAMIC
 
+  ' ... not something that can be translated easily.
+
   ' END
 
   ' ...in VB.NET.
@@ -210,7 +253,15 @@
 
   ' EQV
 
+  ' ...roughly translates to value AndAlso value (alternatively Not value AndAlso Not value) when used as a logical operator; as a mathimatical operator, no easily translation available.
+
   ' ERASE
+
+  Public Sub [Erase](ParamArray arrays As Object())
+    ' With a static array, the ERASE statement merely resets all elements to their default value -- 0 if numeric or null strings ("").  ERASE does not change the dimensions of the static array defined in the DIM statement nore release any memory.
+    ' With a dynamic array, however, ERASE deallocates the memory used by the array, thereby freeing the memory for other dynamic arrays.  Before you can reuse an erased array, you must dimension it agin with DIM.  (QBasic offers the REDIM statement as an alternative to erasing and redimensioning a dynamic array.  REDIM deallocates, redimensions, and reinitializes a dynamic array in one step.)
+    Throw New NotImplementedException()
+  End Sub
 
   ' ERDEV
 
@@ -224,6 +275,8 @@
 
   ' EXIT
 
+  ' ...translates to Exit For, Exit Do, etc.
+
   ' EXP
 
   ' FIELD
@@ -231,6 +284,39 @@
   ' FILEATTR
 
   ' FILES
+
+  Public Shared Sub Files(Optional filespec As String = Nothing)
+    ' TODO: Need to do some work for the presented output; some thought needs to go into how to have it look like QB but work with long filenames.
+    ' NOTE: Looks like more modern systems (Windows 10) don't have 8dot3 names enabled; so attempting to pull ShortPathName is pointless.
+    If filespec Is Nothing Then
+      filespec = IO.Directory.GetCurrentDirectory()
+    End If
+    Dim searchPattern As String = "*.*"
+    If filespec.Contains("*") OrElse filespec.Contains("?") Then
+      'TODO: Need to split out the search pattern from the path.
+    End If
+    Print(IO.Directory.GetCurrentDirectory) ' FILES displays a 1-line header that contains the current directory even if you specify another pathname in the FILES statement.
+    Print("        .   <DIR>")
+    Print("        ..  <DIR>")
+    For Each directory In IO.Directory.GetDirectories(filespec, searchPattern)
+      Print(IO.Path.GetDirectoryName(directory) & " <DIR>")
+    Next
+    For Each file In IO.Directory.GetFiles(filespec, searchPattern)
+      Print(IO.Path.GetFileName(file))
+      'Print(IO.Path.GetFileName(GetShortPath(file)))
+    Next
+    Dim driveName = IO.Path.GetPathRoot(filespec)
+    Dim di = New IO.DriveInfo(driveName)
+    Print(String.Format("{0} Bytes free", di.AvailableFreeSpace))
+  End Sub
+
+  'Private Declare Auto Function GetShortPathName Lib "kernel32" (longPath As String, shortPath As Text.StringBuilder, shortBufferSize As Integer) As Integer
+
+  'Private Shared Function GetShortPath(path As String) As String
+  '  Dim result = New Text.StringBuilder(260)
+  '  GetShortPathName(path, result, result.Capacity)
+  '  Return result.ToString
+  'End Function
 
   ' FIX
 
@@ -262,11 +348,49 @@
 
   ' HEX$
 
+  Public Shared Function Hex(num As Object) As String
+    Return Microsoft.VisualBasic.Hex(num)
+  End Function
+
+  Public Shared Function Hex(num As Byte) As String
+    Return Microsoft.VisualBasic.Hex(num)
+  End Function
+
+  Public Shared Function Hex(num As SByte) As String
+    Return Microsoft.VisualBasic.Hex(num)
+  End Function
+
+  Public Shared Function Hex(num As UShort) As String
+    Return Microsoft.VisualBasic.Hex(num)
+  End Function
+
+  Public Shared Function Hex(num As UInteger) As String
+    Return Microsoft.VisualBasic.Hex(num)
+  End Function
+
+  Public Shared Function Hex(num As ULong) As String
+    Return Microsoft.VisualBasic.Hex(num)
+  End Function
+
+  Public Shared Function Hex(num As Short) As String
+    Return Microsoft.VisualBasic.Hex(num)
+  End Function
+
+  Public Shared Function Hex(num As Integer) As String
+    Return Microsoft.VisualBasic.Hex(num)
+  End Function
+
+  Public Shared Function Hex(num As Long) As String
+    Return Microsoft.VisualBasic.Hex(num)
+  End Function
+
   ' IF
 
   ' ...in VB.NET.
 
   ' IMP
+
+  ' ...roughly translates to = Not (Not value Andalso value) when used as an logical operator; ; as a mathimatical operator, no easily translation available.
 
   ' INKEY$
 
@@ -297,6 +421,14 @@
 
   ' INSTR
 
+  Public Shared Function Instr(string1 As String, string2 As String) As Integer
+    Return Microsoft.VisualBasic.InStr(string1, string2)
+  End Function
+
+  Public Shared Function Instr(start As Integer, string1 As String, string2 As String) As Integer
+    Return Microsoft.VisualBasic.InStr(start, string1, string2)
+  End Function
+
   ' INT
 
   ' ...in VB.NET.
@@ -317,11 +449,77 @@
 
   ' LBOUND
 
+  Public Shared Function LBound(array As System.Array, Optional rank As Integer = 1) As Integer
+    Return Microsoft.VisualBasic.LBound(array, rank)
+  End Function
+
   ' LCASE$
+
+  Public Shared Function LCase(value As Char) As Char
+    Return Microsoft.VisualBasic.LCase(value)
+  End Function
+
+  Public Shared Function LCase(value As String) As String
+    Return Microsoft.VisualBasic.LCase(value)
+  End Function
 
   ' LEFT$
 
+  Public Shared Function Left(str As String, length As Integer) As String
+    Return Microsoft.VisualBasic.Left(str, length)
+  End Function
+
   ' LEN
+
+  Public Shared Function Len(expression As Boolean) As Integer
+    Return Microsoft.VisualBasic.Len(expression)
+  End Function
+
+  Public Shared Function Len(expression As Byte) As Integer
+    Return Microsoft.VisualBasic.Len(expression)
+  End Function
+  Public Shared Function Len(expression As Char) As Integer
+    Return Microsoft.VisualBasic.Len(expression)
+  End Function
+  Public Shared Function Len(expression As Date) As Integer
+    Return Microsoft.VisualBasic.Len(expression)
+  End Function
+  Public Shared Function Len(expression As Decimal) As Integer
+    Return Microsoft.VisualBasic.Len(expression)
+  End Function
+  Public Shared Function Len(expression As Double) As Integer
+    Return Microsoft.VisualBasic.Len(expression)
+  End Function
+  Public Shared Function Len(expression As Integer) As Integer
+    Return Microsoft.VisualBasic.Len(expression)
+  End Function
+  Public Shared Function Len(expression As Long) As Integer
+    Return Microsoft.VisualBasic.Len(expression)
+  End Function
+  Public Shared Function Len(expression As Object) As Integer
+    Return Microsoft.VisualBasic.Len(expression)
+  End Function
+  Public Shared Function Len(expression As SByte) As Integer
+    Return Microsoft.VisualBasic.Len(expression)
+  End Function
+  Public Shared Function Len(expression As Short) As Integer
+    Return Microsoft.VisualBasic.Len(expression)
+  End Function
+  Public Shared Function Len(expression As Single) As Integer
+    Return Microsoft.VisualBasic.Len(expression)
+  End Function
+  Public Shared Function Len(expression As String) As Integer
+    Return Microsoft.VisualBasic.Len(expression)
+  End Function
+  Public Shared Function Len(expression As UInteger) As Integer
+    Return Microsoft.VisualBasic.Len(expression)
+  End Function
+  Public Shared Function Len(expression As ULong) As Integer
+    Return Microsoft.VisualBasic.Len(expression)
+  End Function
+  Public Shared Function Len(expression As UShort) As Integer
+    Return Microsoft.VisualBasic.Len(expression)
+  End Function
 
   ' LET
 
@@ -383,7 +581,23 @@
 
   ' MID$ (Function)
 
+  Public Shared Function Mid(str As String, start As Integer) As String
+    Return Microsoft.VisualBasic.Mid(str, start)
+  End Function
+
+  Public Shared Function Mid(str As String, start As Integer, length As String) As String
+    Return Microsoft.VisualBasic.Mid(str, start, length)
+  End Function
+
   ' MID$ (Statemnt)
+
+  ' ...not something that can easily be added since the VB.NET doesn't support MID$(a$, 7, 5) = "new value"; with that said, here's something that "kind of" translates.
+
+  Public Shared Sub Mid(ByRef str As String, start As Integer, length As String, replacement As String)
+    Dim l = If(start - 1 >= 0, Left(str, start - 1), "")
+    Dim r = If(start + length - 1 <= Len(str), Right(str, Len(str) - (start + length - 1)), "")
+    str = l & Left(replacement, length) & r
+  End Sub
 
   ' MKD$
 
@@ -411,29 +625,85 @@
 
   ' OCT$
 
+  Public Shared Function Oct(num As Object) As String
+    Return Microsoft.VisualBasic.Oct(num)
+  End Function
+
+  Public Shared Function Oct(num As Byte) As String
+    Return Microsoft.VisualBasic.Oct(num)
+  End Function
+
+  Public Shared Function Oct(num As SByte) As String
+    Return Microsoft.VisualBasic.Oct(num)
+  End Function
+
+  Public Shared Function Oct(num As UShort) As String
+    Return Microsoft.VisualBasic.Oct(num)
+  End Function
+
+  Public Shared Function Oct(num As UInteger) As String
+    Return Microsoft.VisualBasic.Oct(num)
+  End Function
+
+  Public Shared Function Oct(num As ULong) As String
+    Return Microsoft.VisualBasic.Oct(num)
+  End Function
+
+  Public Shared Function Oct(num As Short) As String
+    Return Microsoft.VisualBasic.Oct(num)
+  End Function
+
+  Public Shared Function Oct(num As Integer) As String
+    Return Microsoft.VisualBasic.Oct(num)
+  End Function
+
+  Public Shared Function Oct(num As Long) As String
+    Return Microsoft.VisualBasic.Oct(num)
+  End Function
+
   ' ON COM GOSUB
+
+  ' ...no real way to translate this other than to migrate to "events".  With that said, there might be "something" that can be done to provide similar functionality...
 
   ' ON ERROR GOTO
 
   ' ON...GOSUB
 
+  ' ...no real way to translate this other than to change the approach; the closest thing to this is to transition to either IF/THEN/ELSE or SELECT CASE and SUB/FUNCTION.
+
   ' ON...GOTO
+
+  ' ...no real way to translate this other than to change the approach; the closest thing to this is to transition to either IF/THEN/ELSE or SELECT CASE and SUB/FUNCTION.
 
   ' ON KEY(n) GOSUB
 
+  ' ...no real way to translate this other than to migrate to "events".  With that said, there might be "something" that can be done to provide similar functionality...
+
   ' ON PEN GOSUB
+
+  ' ...no real way to translate this other than to migrate to "events".  With that said, there might be "something" that can be done to provide similar functionality...
 
   ' ON PLAY GOSUB
 
+  ' ...no real way to translate this other than to migrate to "events".  With that said, there might be "something" that can be done to provide similar functionality...
+
   ' ON STRIG GOSUB
 
+  ' ...no real way to translate this other than to migrate to "events".  With that said, there might be "something" that can be done to provide similar functionality...
+
   ' ON TIMER GOSUB
+
+  ' ...no real way to translate this other than to migrate to "events".  With that said, there might be "something" that can be done to provide similar functionality...
 
   ' OPEN
 
   ' OPEN COM
 
+  ' ...no real way to translate this other than to migrate to "events".  With that said, there might be "something" that can be done to provide similar functionality...
+
   ' OPTION BASE
+
+  ' ... no real way to translate this to VB.NET.
 
   ' OR
 
@@ -548,6 +818,16 @@
 
   ' READ
 
+  Public Shared Sub Read(ByRef var1 As Object)
+    If m_readIndex > m_data.Count - 1 Then
+      Throw New InvalidOperationException("Out of DATA")
+    Else
+      Dim value = m_data(m_readIndex)
+      m_readIndex += 1
+      var1 = value
+    End If
+  End Sub
+
   ' REDIM
 
   ' ...in VB.NET.
@@ -558,9 +838,21 @@
 
   ' RESTORE
 
+  Public Shared Sub Restore()
+    m_readIndex = 0
+  End Sub
+
+  Public Shared Sub Restore(index As Integer) ' Not exactly the same, but similar "in spirit".
+    m_readIndex = index
+  End Sub
+
   ' RESUME
 
   ' RIGHT$
+
+  Public Shared Function Right(str As String, length As Integer) As String
+    Return Microsoft.VisualBasic.Right(str, length)
+  End Function
 
   ' RMDIR
 
@@ -615,6 +907,8 @@
 
   ' SHARED
 
+  ' ...Shared keyword is used differently in VB.NET; not something that has an easy translation.
+
   ' SHELL
 
   ' SIN
@@ -659,6 +953,10 @@
 
   ' SPACE$
 
+  Public Shared Function Space(number As Integer) As String
+    Return Microsoft.VisualBasic.Space(number)
+  End Function
+
   ' SPC
 
   Public Shared Sub Spc(col As Integer)
@@ -669,7 +967,11 @@
 
   ' STATIC
 
+  ' ...in VB.NET.
+
   ' $STATIC
+
+  ' ... not something that can easily be translated.
 
   ' STICK
 
@@ -679,11 +981,17 @@
 
   ' STR$
 
+  Public Shared Function Str(number As Object) As String
+    Return Microsoft.VisualBasic.Str(number)
+  End Function
+
   ' STRIG
 
   ' STRIG ON/OFF/STOP
 
   ' STRING
+
+  ' ...in VB.NET.
 
   ' STRING$
 
@@ -709,6 +1017,12 @@
 
   ' SWAP
 
+  Public Shared Sub Swap(ByRef var1 As Object, ByRef var2 As Object)
+    Dim temp = var1
+    var1 = var2
+    var2 = temp
+  End Sub
+
   ' SYSTEM
 
   ' TAB
@@ -729,13 +1043,39 @@
 
   ' TYPE...END TYPE
 
+  ' ...Roughly translates to Structure...End Structure.
+
   ' UBOUND
 
+  Public Shared Function UBound(array As System.Array, Optional rank As Integer = 1) As Integer
+    Return Microsoft.VisualBasic.UBound(array, rank)
+  End Function
+
   ' UCASE$
+
+  Public Shared Function UCase(value As Char) As Char
+    Return Microsoft.VisualBasic.UCase(value)
+  End Function
+
+  Public Shared Function UCase(value As String) As String
+    Return Microsoft.VisualBasic.UCase(value)
+  End Function
 
   ' UNLOCK
 
   ' VAL
+
+  Public Shared Function Val(expression As Char) As Integer
+    Return Microsoft.VisualBasic.Val(expression)
+  End Function
+
+  Public Shared Function Val(expression As Object) As Integer
+    Return Microsoft.VisualBasic.Val(expression)
+  End Function
+
+  Public Shared Function Val(expression As String) As Integer
+    Return Microsoft.VisualBasic.Val(expression)
+  End Function
 
   ' VARPTR, VARPTR$
 
@@ -753,7 +1093,7 @@
 
   ' WHILE...WEND
 
-  ' ...in VB.NET.
+  ' ...in VB.NET as WHILE...END WHILE.
 
   ' WIDTH (File I/O)
 
@@ -794,5 +1134,7 @@
   ' WRITE #
 
   ' XOR
+
+  ' ...in VB.NET.
 
 End Class
