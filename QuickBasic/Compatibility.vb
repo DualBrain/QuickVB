@@ -1,13 +1,21 @@
 ﻿Public Class Compatibility
 
+  ' Used in Print(), ...
   Public Const SEMICOLON As String = ";"
   Public Const COMMA As String = ","
 
+  ' Used in Screen(), ...
   Private Shared m_screenMode As Integer = 0
   Private Shared m_window As System.Windows.Forms.Form
 
-  Private Sub New()
+  ' Used in Data(), Read(), Restore()
+  Private Shared m_data As New List(Of Object)
+  Private Shared m_readIndex As Integer = 0
 
+  ' Used in Close(), ...
+  Private Shared m_filenum As New List(Of Integer) ' NOTE: This needs to be evolved more to handle state (number (possibly a dictionary), file path / device info, position, etc.
+
+  Private Sub New()
   End Sub
 
   ' ABS
@@ -44,18 +52,44 @@
     Return Math.Abs(value)
   End Function
 
+  Public Shared Function Abs(value As String) As Integer
+    Throw New ArgumentException("Type mismatch")
+  End Function
+
+  Public Shared Function Abs(value As Object) As Integer
+    Throw New ArgumentException("Type mismatch")
+  End Function
+
   ' AND
 
   ' ...in VB.NET.
 
   ' ASC
 
-  ' ...in VB.NET.
+  Public Shared Function Asc(value As Char) As Integer
+    Return Microsoft.VisualBasic.Asc(value)
+  End Function
+
+  Public Shared Function Asc(value As String) As Integer
+    If String.IsNullOrEmpty(value) Then
+      Throw New ArgumentException("Illegal function call")
+    Else
+      Return Microsoft.VisualBasic.Asc(value)
+    End If
+  End Function
+
+  Public Shared Function Asc(value As Object) As Integer
+    Throw New ArgumentException("Type mismatch")
+  End Function
 
   ' ATN
 
   Public Shared Function Atn(value As Double) As Double
     Return Math.Atan(value)
+  End Function
+
+  Public Shared Function Atn(value As Object) As Integer
+    Throw New ArgumentException("Type mismatch")
   End Function
 
   ' BEEP
@@ -66,7 +100,17 @@
 
   ' BLOAD
 
+  Public Shared Sub BLoad(name As String, Optional offset As Integer = 0)
+    'TODO: Need to put some thought into how (or if) there's a way to handle this method; for now, throw not implemented.
+    Throw New NotImplementedException()
+  End Sub
+
   ' BSAVE
+
+  Public Shared Sub BSave(name As String, offset As Integer, bytes As Integer)
+    'TODO: Need to put some thought into how (or if) there's a way to handle this method; for now, throw not implemented.
+    Throw New NotImplementedException()
+  End Sub
 
   ' CALL
 
@@ -76,9 +120,13 @@
 
   ' ...in VB.NET.
 
+
   ' CHAIN
 
-  ' ...not something that can be translated easily.
+  Public Shared Sub Chain(filename As String)
+    ' ...not something that can be translated easily.
+    Throw New NotImplementedException()
+  End Sub
 
   ' CHDIR
 
@@ -96,17 +144,49 @@
 
   ' CHR$
 
+  Public Shared Function Chr(val As String) As String
+    If String.IsNullOrEmpty(val) Then
+      Return Chr(0)
+    ElseIf IsNumeric(val) Then
+      Return Chr(CInt(val))
+    Else
+      Throw New ArgumentException("Type mismatch")
+    End If
+  End Function
+
   Public Shared Function Chr(val As Integer) As String
-    Return Microsoft.VisualBasic.Chr(val)
+    Select Case val
+      Case 0 To 255
+        Return Microsoft.VisualBasic.Chr(val)
+      Case Else
+        Throw New ArgumentException("Illegal Function call")
+    End Select
   End Function
 
   ' CINT
 
   ' ... in VB.NET.
 
-  ' CIRCLE
+  ' CIRCLE (NOTE: Syntax Change)
+
+  Public Shared Sub Circle([step] As Boolean, x As Integer, y As Integer, radius As Integer, Optional color As Integer = -1, Optional start As Single = 0.00, Optional [stop] As Single = 0.00, Optional aspect As Single = 0.00)
+    If [step] Then
+      ' Calculate x, y as "offset"...
+    End If
+    Circle(x, y, radius, color, start, [stop], aspect)
+  End Sub
+
+  Public Shared Sub Circle(x As Integer, y As Integer, radius As Integer, Optional color As Integer = -1, Optional start As Single = 0.00, Optional [stop] As Single = 0.00, Optional aspect As Single = 0.00)
+    Throw New NotImplementedException()
+  End Sub
 
   ' CLEAR
+
+  ' ... not something that can be translated to VB.NET.
+  Public Shared Sub Clear(dummy1 As Object, dummy2 As Object, stack As Integer)
+    Restore()
+    Throw New NotImplementedException()
+  End Sub
 
   ' CLNG
 
@@ -114,9 +194,26 @@
 
   ' CLOSE
 
+  Public Shared Sub Close()
+    For Each filenum In m_filenum
+      'TODO: Close the file.
+    Next
+    m_filenum.Clear()
+  End Sub
+
+  Public Shared Sub Close(ParamArray filenums As Integer())
+    For Each filenum In filenums
+      If m_filenum.Contains(filenum) Then
+        'TODO: Close the file.
+        m_filenum.Remove(filenum)
+      End If
+    Next
+  End Sub
+
   ' CLS
 
   Public Shared Sub Cls(Optional viewport As Integer? = -1)
+    ' TODO: Need to revise this to work with the graphics "screen" as that part of the project takes shape.
     If viewport Is Nothing Then
       viewport = -1
     End If
@@ -142,6 +239,8 @@
 
   Public Shared Sub Color(Optional foreground As Integer = -1, Optional background As Integer = -1, Optional border As Integer = -1)
 
+    'TODO: Need to take into account the current screen mode...
+
     ' Screen mode 0
     ' Screen Mode 1 - second param is "palette"; 3rd param is unused (invalid).
     ' Screen Mode 7-10 - second param is "background"; 3rd param is unused (invalid).
@@ -155,7 +254,7 @@
     End If
 
     If border > -1 Then
-      ' Windows console doesn't support the concept of "border".
+      ' Windows console doesn't support the concept of "border".  TODO: or does it - need to verify?
     End If
 
   End Sub
@@ -172,6 +271,18 @@
 
   ' COS
 
+  Public Shared Function Cos(angle As String) As Double
+    If IsNumeric(angle) Then
+      Return System.Math.Cos(angle)
+    Else
+      Throw New ArgumentException("Type mismatch")
+    End If
+  End Function
+
+  Public Shared Function Cos(angle As Double) As Double
+    Return System.Math.Cos(angle)
+  End Function
+
   ' CSNG
 
   ' ...in VB.NET.
@@ -179,33 +290,81 @@
   ' CSRLIN
 
   Public Shared Function CsrLin() As Integer
+    'TODO: Need to handle all Screen() modes; for now, just working with text.
     Return Console.CursorTop + 1 ' Range of 1-25 (CGA) , or 1-43 (EGA) or 1-60 (VGA/MCGA)...
   End Function
 
   ' CVD
 
+  Public Shared Function CVD(value As String) As Double
+    If value.Length <> 8 Then
+      Throw New ArgumentException()
+    End If
+    Throw New NotImplementedException()
+  End Function
+
   ' CVDMBF
+
+  Public Shared Function CVDMBF(value As String) As Double
+    If value.Length <> 8 Then
+      Throw New ArgumentException()
+    End If
+    Throw New NotImplementedException()
+  End Function
 
   ' CVI
 
+  Public Shared Function CVI(value As String) As Short
+    If value.Length <> 2 Then
+      Throw New ArgumentException()
+    End If
+    Throw New NotImplementedException()
+  End Function
+
   ' CVL
+
+  Public Shared Function CVL(value As String) As Integer
+    If value.Length <> 4 Then
+      Throw New ArgumentException()
+    End If
+    Throw New NotImplementedException()
+  End Function
 
   ' CVS
 
+  Public Shared Function CVS(value As String) As Single
+    If value.Length <> 4 Then
+      Throw New ArgumentException()
+    End If
+    Throw New NotImplementedException()
+  End Function
+
   ' CVSMBF
+
+  Public Shared Function CVSMBF(value As String) As Single
+    If value.Length <> 4 Then
+      Throw New ArgumentException()
+    End If
+    Throw New NotImplementedException()
+  End Function
 
   ' DATA
 
-  Private Shared m_data As New List(Of Object)
-  Private Shared m_readIndex As Integer = 0
-
-  Public Sub Data(ParamArray values As Object())
+  Public Shared Sub Data(ParamArray values As Object())
     For Each value In values
       m_data.Add(value)
     Next
   End Sub
 
-  ' DATE$
+  ' DATE$ (Statement)
+
+  ' ... not something that can be in VB.NET??? (Wondering if this could be some sort of a write-only property???)
+
+  ' DATE$ (Function)
+
+  Public Shared Function QBDate() As String
+    Return Now.ToString("MM-dd-yyyy")
+  End Function
 
   ' DECLARE 
 
@@ -237,6 +396,12 @@
 
   ' DRAW
 
+  Public Shared Sub Draw(commandString As String)
+    'TODO: I have an existing project where I've implemented something very similar to this command (sub-language); 
+    '      it was for the Tandy Color Computer version of BASIC, but should be pretty easy to get up to the GW-BASIC/QB version. -- Cory Smith
+    Throw New NotImplementedException()
+  End Sub
+
   ' $DYNAMIC
 
   ' ... not something that can be translated easily.
@@ -245,9 +410,52 @@
 
   ' ...in VB.NET.
 
-  ' ENVIRON
+  ' ENVIRON/ENVIRON$
 
-  ' ENVIRON$
+  Public Shared Function Environ(value As String) As String
+
+    'NOTE: This acts as both the getter and setter; this is handled based on the value parameter.
+    '      If contains an = in the value, it's assumed to be a setter.
+    '      If no = in the value, it's assumed to be a getter.
+    ' 
+    '      This allows for both of the following scenarios to be valid:
+    '   
+    '      a$ = Environ("PATH")
+    '      Environ("PATH=C:\DOS")
+    '
+    ' .NET Docs: https://docs.microsoft.com/en-us/dotnet/api/system.environment.getenvironmentvariable?view=netframework-4.7.2
+
+    If value.Contains("=") Then
+      Dim entries = value.Split(";"c)
+      For Each entry In entries
+        If entry.Contains("=") Then
+          Dim nameValue = entry.Split("=")
+          If nameValue.Length = 2 Then
+            Environment.SetEnvironmentVariable(nameValue(0), nameValue(1))
+          Else
+            Throw New ArgumentException()
+          End If
+        Else
+          Throw New ArgumentException()
+        End If
+      Next
+      Return Nothing
+    Else
+      Return Environment.GetEnvironmentVariable(value)
+    End If
+
+  End Function
+
+  Public Shared Function Environ(num As Integer) As String
+    Dim index = 0
+    For Each entry In Environment.GetEnvironmentVariables()
+      If index + 1 = num Then
+        Return $"{entry.key}={entry.value}"
+      End If
+      index += 1
+    Next
+    Return ""
+  End Function
 
   ' EOF
 
