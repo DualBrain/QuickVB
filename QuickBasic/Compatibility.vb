@@ -459,13 +459,26 @@
 
   ' EOF
 
+  Public Shared Function Eof(filenum As Integer) As Integer
+    Dim result = 0
+    If m_filenum.Contains(filenum) Then
+      'TODO: Add additional details to the m_filenum "state machine" to provide ability to determine if EOF has been encountered.
+      'TODO: Determine if the last "input statement" has reached the end of the file.
+      'TODO: If using GET to read from a file, the only way that a -1 is returned is if the GET didn't have enough data to populate the structure.
+      Throw New NotImplementedException()
+    Else
+      Throw New ArgumentException("Bad file name or number")
+    End If
+    Return result
+  End Function
+
   ' EQV
 
   ' ...roughly translates to value AndAlso value (alternatively Not value AndAlso Not value) when used as a logical operator; as a mathimatical operator, no easily translation available.
 
   ' ERASE
 
-  Public Sub [Erase](ParamArray arrays As Object())
+  Public Shared Sub [Erase](ParamArray arrays As Object())
     ' With a static array, the ERASE statement merely resets all elements to their default value -- 0 if numeric or null strings ("").  ERASE does not change the dimensions of the static array defined in the DIM statement nore release any memory.
     ' With a dynamic array, however, ERASE deallocates the memory used by the array, thereby freeing the memory for other dynamic arrays.  Before you can reuse an erased array, you must dimension it agin with DIM.  (QBasic offers the REDIM statement as an alternative to erasing and redimensioning a dynamic array.  REDIM deallocates, redimensions, and reinitializes a dynamic array in one step.)
     Throw New NotImplementedException()
@@ -473,13 +486,51 @@
 
   ' ERDEV
 
+  Public Shared Function ErDev() As Short
+
+    ' LSB = MS-DOS error code that reveals the nature of the error.
+    ' MSB = "device attribute word", a 2-byte collection of flags that is part of the device-driver program in memory.
+    '
+    ' To read the separate values:
+    ' 
+    ' deviceId% = VAL("&H" + LEFT$(HEX$(ERDEV), 2))
+    ' errorCode% = VAL("&H" + RIGHT$(HEX$(ERDEV), 2))
+
+    'NOTE: There are two tables in The Waite Group's Microsoft QuickBASIC Bible p356 that can be used to potentially simulate the same information in VB.NET.
+
+    Throw New NotImplementedException()
+
+  End Function
+
   ' ERDEV$
+
+  Public Shared Function ErDevString() As String
+
+    Return "A:"
+    Return "B:"
+    Return "C:"
+    Return "LPT1    "
+    Return "COM1    "
+
+  End Function
 
   ' ERL
 
+  Public Shared Function Erl() As Integer
+    Return Microsoft.VisualBasic.Err.Erl
+  End Function
+
   ' ERR
 
+  Public Shared Function Err() As Integer
+    Return Microsoft.VisualBasic.Err.Number
+  End Function
+
   ' ERROR
+
+  Public Shared Sub [Error](errorCode As Integer)
+    Microsoft.VisualBasic.Err.Raise(errorCode)
+  End Sub
 
   ' EXIT
 
@@ -487,9 +538,38 @@
 
   ' EXP
 
+  Public Shared Function Exp(expr As Double) As Double
+    Return Math.Exp(expr)
+  End Function
+
   ' FIELD
 
+  ' ... Not sure if there is a way to handle FIELD; will have to think on this one a bit more.
+
   ' FILEATTR
+
+  Public Shared Sub FileAttr(filenum As Integer, attribute As Integer)
+    If m_filenum.Contains(filenum) Then
+      Select Case attribute
+        Case 1 ' Returns information about the mode in which the file was opened.
+          ' Returns:
+          '  
+          '   1 Input
+          '   2 Output
+          '   4 Random
+          '   4 Append
+          '  32 Binary
+          '
+          Throw New NotImplementedException()
+        Case 2 ' Returns the file's DOS file handle.
+          Throw New NotImplementedException()
+        Case Else
+          Throw New ArgumentException("attribute")
+      End Select
+    Else
+      Throw New ArgumentException("Bad file name or number")
+    End If
+  End Sub
 
   ' FILES
 
@@ -528,7 +608,9 @@
 
   ' FIX
 
-  ' ...in VB.NET.
+  ' ...in VB.NET.  
+  'TODO: Not wrapping this one since the VB.NET compiler has an optimization technique when encountering CINT(FIX(value)); if we were to wrap it to 
+  '      in an effort to reproduce the total behavior of QB, we would lose this optimzation.  Need to evaluate further.
 
   ' FOR...NEXT
 
@@ -536,7 +618,37 @@
 
   ' FRE
 
+  Public Shared Function Fre(number As Integer) As Integer
+    Select Case number
+      Case -1 ' Returns the amount of memory available in the heap.
+        Throw New NotImplementedException()
+      Case -2 ' Returns the amount of available stack space.
+        Throw New NotImplementedException()
+      Case Else ' Returns the size of the next block of unused string space.
+        Throw New NotImplementedException()
+    End Select
+  End Function
+
+  Public Shared Function Fre(value As String) As Integer
+    ' Compacts the unued string space into the largest possible block and then returns the amount of available string space.
+    Throw New NotImplementedException()
+  End Function
+
   ' FREEFILE
+
+  Public Shared Function FreeFile() As Integer
+    ' Returns the lowest file number that is not associated with an open file.
+    If m_filenum.Count >= 15 Then
+      ' QB4.5 allows nor more than 15 files to be open at once.
+      Throw New InvalidOperationException("Path/file access")
+    End If
+    For index = 1 To 255
+      If Not m_filenum.Contains(index) Then
+        Return index
+      End If
+    Next
+    Throw New InvalidOperationException() ' ????? Not sure what would happen if you exceeded 255 open files (which isn't possible in QB45, so have to try to test other versions).
+  End Function
 
   ' FUNCTION
 
