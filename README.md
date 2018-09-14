@@ -19,6 +19,8 @@ There's a lot of work left to be done to turn this sample into an environment (I
 
 This is where this GitHub project comes in; it serves to re-ignite and continue this effort...
 
+* Move to latest release of "Roslyn"
+* Move to newer version of .NET (currently set to 4.5)
 * Migrate from being a "demo" to a full-featured (for a Console app) IDE
 * Match menus and other UI elements to original QuickBASIC IDE (WIP)
 * Improve ConsoleGUI to support "popup" windows; needed for additional functionality
