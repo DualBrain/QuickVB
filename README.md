@@ -28,6 +28,10 @@ This is where this GitHub project comes in; it serves to re-ignite and continue 
 * Actually port GORILLA.BAS as an included sample
 * Remove "self-editing".
 
+Currently it is necessary (due to the "old" version of "Roslyn"), it may be necessary to install the following in order to get running:
+
+* [Microsoft Build Tools 2013](https://www.microsoft.com/en-US/download/details.aspx?id=40760) - required by the v0.7 version of "Roslyn".
+
 ## QuickVB Features
 
 All of the features below are powered by the [.NET Compiler Platform ("Roslyn")](https://github.com/dotnet/roslyn/) APIs. To see them light up, click *Enable Roslyn* on the *Options* menu.
