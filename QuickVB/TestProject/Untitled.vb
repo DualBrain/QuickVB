@@ -2,8 +2,10 @@
 
   Sub Main()
 
+    cls
+
     Files
-    Sleep
+    input(1)
 
     Color(, 1)
     Cls(0)

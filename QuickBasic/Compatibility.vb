@@ -656,7 +656,97 @@
 
   ' GET (File I/O)
 
+  Public Shared Sub QBGet(filenum As Integer, Optional position As Integer? = Nothing, Optional ByRef variable As Object = Nothing)
+
+    If m_filenum.Contains(filenum) Then
+
+      If variable Is Nothing Then
+
+        ' GET #1, 1
+        ' - Retrieves the first record in a random-access file that contains records defined by a FIELD statement.
+
+        Throw New NotImplementedException()
+
+      Else
+
+        Dim isBinary = False
+
+        If isBinary Then
+
+          ' OPEN "CONFIG.DAT" FOR BINARY AS #1
+          ' GET #1, 100, config%
+          ' - Opens a binary file, retrieves from the 100th byte position an integer and assigns it to the variable config%.
+
+          If position IsNot Nothing Then
+            'TODO: Determine position to read based as a byte-by-byte index; in other words, position * byte.
+          End If
+
+          Dim t = variable.GetType
+          If t.Equals(GetType(Byte)) Then
+          ElseIf t.Equals(GetType(SByte)) Then
+          ElseIf t.Equals(GetType(Short)) Then
+          ElseIf t.Equals(GetType(UShort)) Then
+          ElseIf t.Equals(GetType(Integer)) Then
+          ElseIf t.Equals(GetType(UInteger)) Then
+          ElseIf t.Equals(GetType(Long)) Then
+          ElseIf t.Equals(GetType(ULong)) Then
+          ElseIf t.Equals(GetType(Decimal)) Then
+          ElseIf t.Equals(GetType(Single)) Then
+          ElseIf t.Equals(GetType(Double)) Then
+          ElseIf t.Equals(GetType(String)) Then
+          Else
+            ' Other?
+          End If
+
+          Throw New NotImplementedException()
+
+        Else
+
+          ' GET #1, , info
+          ' - Retieves the next record (if one exists) in a random-access file and assigns it to the record variable info.
+
+          If position IsNot Nothing Then
+            'TODO: Determine position to read based as a size of the structure; in other words, position * Len(structure).
+          End If
+
+          Throw New NotImplementedException()
+
+        End If
+
+      End If
+
+    Else
+      Throw New ArgumentException("filenum")
+    End If
+
+  End Sub
+
   ' GET (Graphics)
+
+  Public Structure QBCoord
+    Public X As Integer
+    Public Y As Integer
+  End Structure
+
+  Public Shared Function QBStep(x As Integer, y As Integer) As QBCoord
+    Return New QBCoord With {.X = x, .Y = y}
+  End Function
+
+  Public Shared Sub QBGet(coord1 As Integer(), coord2 As Integer(), buffer As Short())
+
+    ' GET STEP(20, -15)-STEP(xInc, yInc), image&(0, 5)
+
+    Throw New NotImplementedException()
+
+  End Sub
+
+  Public Shared Sub QBGet(coord1 As QBCoord, coord2 As QBCoord, buffer As Short())
+
+    ' GET STEP(20, -15)-STEP(xInc, yInc), image&(0, 5)
+
+    Throw New NotImplementedException()
+
+  End Sub
 
   ' GOSUB...RETURN
 
@@ -715,14 +805,67 @@
   ' INKEY$
 
   Public Shared Function Inkey() As String
-    Return ""
+    If Console.KeyAvailable Then
+      Dim key = Console.ReadKey(True) ' We don't want to "echo".
+      'TODO: Need to handle "function keys" which include:
+      '      arrow keys, pgup, pgdn, home, end, F1-F12 and any Alt+alpha/numeric key combinations.
+      '      This will need to be returned as CHR$(0) + the keys "scan code".
+      Return key.KeyChar
+    Else
+      Return ""
+    End If
   End Function
 
   ' INP
 
   ' INPUT
 
-  Public Shared Sub Input(noCr As Boolean, prompt As String, noNewLine As Boolean, noQuestion As Boolean, ByRef a As String())
+  Public Shared Sub Input(ParamArray a As String())
+    Input(False, Nothing, False, a)
+  End Sub
+
+  Public Shared Sub Input(noCr As Boolean, ParamArray a As String())
+    Input(noCr, Nothing, False, a)
+  End Sub
+
+  Public Shared Sub Input(noCr As Boolean, prompt As String, ParamArray a As String())
+    Input(noCr, prompt, False, a)
+  End Sub
+
+  Public Shared Sub Input(prompt As String, ParamArray a As String())
+    Input(False, prompt, False, a)
+  End Sub
+
+  Public Shared Sub Input(noCr As Boolean, prompt As String, includeQuestion As Boolean, ParamArray a As String())
+
+    'TODO: Console.ReadLine() doesn't appear to be "echoing" to the screen like Console.ReadKey()... so the value being entered isn't visible...
+
+    If Not noCr Then
+      Console.WriteLine()
+    End If
+
+    Do
+
+      If prompt Is Nothing Then
+        Console.Write("? ")
+      Else
+        Console.Write($"{prompt}{If(includeQuestion, "?", "")} ")
+      End If
+
+      Dim result = Console.ReadLine() 'TODO: This may need to be replaced with ReadKey as there is support for "editing" the entry with several special key combinations... (See p315)
+
+      Dim split = result.Split(","c)
+
+      If a.Count = split.Count Then
+        For index = 0 To a.Count - 1
+          a(index) = split(index)
+        Next
+        Exit Do
+      Else
+        Console.WriteLine("Redo from start")
+      End If
+
+    Loop
 
   End Sub
 
@@ -733,10 +876,30 @@
   ' INPUT$ (Keyboard)
 
   Public Shared Function Input(chars As Integer) As String
+
     ' The INPUT$ (keyboard) function reads a specified number of characters from the keyboard.  
     ' Usually INPUT$ is used to read from a file; however if no file number is specified, INPUT$ 
     ' reads input from the standard input device, which, by default, is the keyboard.
-    Return ""
+
+    Dim result = ""
+
+    Do
+      If Console.KeyAvailable Then
+        Dim key = Console.ReadKey(True) ' We don't want to "echo".
+        If key.Modifiers = ConsoleModifiers.Control AndAlso
+           key.Key = ConsoleKey.C Then 'TODO: Documentation specifically states CTRL+BREAK; not sure if that maps to CTRL+C or not.
+          Return result 'TODO: Not sure if I should return what we've captured thus far or should an empty string be returned?
+        End If
+        'TODO: Need to limit which keys are allowed...
+        result &= key.KeyChar
+      End If
+      If result.Length = chars Then
+        Exit Do
+      End If
+    Loop
+
+    Return result
+
   End Function
 
   ' INSTR
@@ -1243,7 +1406,7 @@
 
     Do
       If Console.KeyAvailable Then
-        Dim junk = Console.ReadKey
+        Dim junk = Console.ReadKey(True)
         Exit Do
       End If
     Loop
