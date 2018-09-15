@@ -30,29 +30,21 @@ This is where this GitHub project comes in; it serves to re-ignite and continue 
 * Actually port GORILLA.BAS as an included sample
 * Remove "self-editing".
 
-Currently it is necessary (due to the "old" version of "Roslyn"), it may be necessary to install the following in order to get running:
+Currently it may be necessary to install the following in order to get running (depending on what you currently already have on your PC):
 
-* [Microsoft Build Tools 2013](https://www.microsoft.com/en-US/download/details.aspx?id=40760) - required by the v0.7 version of "Roslyn".
+* [Microsoft Build Tools 2013](https://www.microsoft.com/en-US/download/details.aspx?id=40760) - required by the v0.7 version of "Roslyn".  (This might be resolved in a future update by including MSBuild in the application.)
 
 ## QuickVB Features
 
 All of the features below are powered by the [.NET Compiler Platform ("Roslyn")](https://github.com/dotnet/roslyn/) APIs. To see them light up, click *Enable Roslyn* on the *Options* menu.
 
-Semantic code colorization (powered by Roslyn's Classification API):
-
-(insert picture)
-
-Completion lists (powered by Roslyn's Recommendations API):
-
-(insert picture)
-
-Compiler diagnostics (powered by Roslyn's Diagnostics API):
-
-(insert picture)
+* Semantic code colorization (powered by Roslyn's Classification API)
+* Completion lists (powered by Roslyn's Recommendations API)
+* Compiler diagnostics (powered by Roslyn's Diagnostics API)
 
 ## Acknowledgements
 
-Many thanks to the authors of the 2014 release:
+Many thanks to the authors of the [2014 release](https://archive.codeplex.com/?p=quickvb):
 
 * Alex Turner
 * Ian Halliday
