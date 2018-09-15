@@ -297,10 +297,24 @@
   ' CVD
 
   Public Shared Function CVD(value As String) As Double
+
     If value.Length <> 8 Then
       Throw New ArgumentException()
     End If
-    Throw New NotImplementedException()
+
+    Dim result As Object = CDbl(0)
+
+    Dim hGC = Runtime.InteropServices.GCHandle.Alloc(result, Runtime.InteropServices.GCHandleType.Pinned)
+    Try
+      Dim ptr = hGC.AddrOfPinnedObject()
+      Dim encode() = Text.Encoding.GetEncoding("iso-8859-1").GetBytes(value)
+      Runtime.InteropServices.Marshal.Copy(encode, 0, ptr, 8)
+    Finally
+      hGC.Free()
+    End Try
+
+    Return DirectCast(result, Double)
+
   End Function
 
   ' CVDMBF
@@ -1083,6 +1097,22 @@
   End Sub
 
   ' MKD$
+
+  Public Shared Function MKD(value As Double) As String
+
+    Dim result(7) As Byte
+
+    Dim hGC = Runtime.InteropServices.GCHandle.Alloc(value, Runtime.InteropServices.GCHandleType.Pinned)
+    Try
+      Dim ptr = hGC.AddrOfPinnedObject()
+      Runtime.InteropServices.Marshal.Copy(ptr, result, 0, 8)
+    Finally
+      hGC.Free()
+    End Try
+
+    Return Text.Encoding.GetEncoding("iso-8859-1").GetString(result)
+
+  End Function
 
   ' MKDIR
 
