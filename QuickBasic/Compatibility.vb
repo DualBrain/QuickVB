@@ -1058,6 +1058,20 @@
 
   ' LINE INPUT
 
+  Public Shared Sub LineInput(ByRef var As String)
+    ' The LINE INPUT statement accepts all data entered as ASCII text and assigns it to a single 
+    ' string variable.  This statement lets the user enter any characters -- even commas and 
+    ' question marks -- that are regarded as delimiters by the INPUT statement.
+    var = ""
+  End Sub
+
+  Public Shared Sub LineInput(prompt As String, ByRef var As String)
+    ' The LINE INPUT statement accepts all data entered as ASCII text and assigns it to a single 
+    ' string variable.  This statement lets the user enter any characters -- even commas and 
+    ' question marks -- that are regarded as delimiters by the INPUT statement.
+    var = ""
+  End Sub
+
   Public Shared Sub LineInput(noCr As Boolean, prompt As String, ByRef var As String)
     ' The LINE INPUT statement accepts all data entered as ASCII text and assigns it to a single 
     ' string variable.  This statement lets the user enter any characters -- even commas and 
@@ -1285,7 +1299,8 @@
   ' PLAY (Statement)
 
   Public Shared Sub Play(commands As String)
-    Throw New NotImplementedException()
+    'TODO: This is a rather complex method to implement... for now, will just "do nothing" as this method will probably end up being the last to be done.
+    'Throw New NotImplementedException()
   End Sub
 
   ' PLAY ON/OFF/STOP
