@@ -848,6 +848,7 @@
       'TODO: Need to handle "function keys" which include:
       '      arrow keys, pgup, pgdn, home, end, F1-F12 and any Alt+alpha/numeric key combinations.
       '      This will need to be returned as CHR$(0) + the keys "scan code".
+      ' See p312.
       Return key.KeyChar
     Else
       Return ""
@@ -876,12 +877,6 @@
 
   Public Shared Sub Input(noCr As Boolean, prompt As String, includeQuestion As Boolean, ParamArray a As String())
 
-    'TODO: Console.ReadLine() doesn't appear to be "echoing" to the screen like Console.ReadKey()... so the value being entered isn't visible...
-
-    If Not noCr Then
-      Console.WriteLine()
-    End If
-
     Do
 
       If prompt Is Nothing Then
@@ -904,6 +899,10 @@
       End If
 
     Loop
+
+    If noCr Then
+      'TODO: Need to keep the cursor on the same line after the enter key is pressed.
+    End If
 
   End Sub
 
@@ -1346,7 +1345,7 @@
 
   ' PRINT
 
-  Public Shared Sub Print(ParamArray data() As String)
+  Public Shared Sub Print(ParamArray data() As Object)
 
     Dim index = 0
 
@@ -1363,7 +1362,7 @@
       Dim isComma = False
       Dim isTab = False
 
-      If peek.StartsWith(" ") Then
+      If peek?.StartsWith(" ") Then
         If peek = SEMICOLON Then
           isSemicolon = True
         ElseIf peek = COMMA Then
@@ -1503,6 +1502,7 @@
           m_window.Dispose()
           m_window = Nothing
         End If
+        Console.CursorVisible = False
       Case 1 ' 320x200 (25 rows, 40 columns)
         If m_window Is Nothing Then
           m_window = New System.Windows.Forms.Form With {.Text = Nothing,

@@ -83,7 +83,7 @@ Module Gorilla
   'Global Variables
   Dim GorillaX(2) '(1 To 2)  'Location of the two gorillas
   Dim GorillaY(2) '(1 To 2)
-  Dim LastBuilding
+  Dim LastBuilding As Integer
 
   Dim pi#
   'Dim LBan&(x), RBan&(x), UBan&(x), DBan&(x) 'Graphical picture of banana
@@ -93,22 +93,22 @@ Module Gorilla
   Dim GorR&(120)        'Gorilla right arm raised
 
   Dim gravity#
-  Dim Wind
+  Dim Wind As Integer
 
   'Screen Mode Variables
-  Dim ScrHeight
-  Dim ScrWidth
-  Dim Mode
-  Dim MaxCol
+  Dim ScrHeight As Integer
+  Dim ScrWidth As Integer
+  Dim Mode As Integer
+  Dim MaxCol As Integer
 
   'Screen Color Variables
-  Dim ExplosionColor
-  Dim SunColor
-  Dim BackColor
-  Dim SunHit
+  Dim ExplosionColor As Integer
+  Dim SunColor As Integer
+  Dim BackColor As Integer
+  Dim SunHit As Integer
 
-  Dim SunHt
-  Dim GHeight
+  Dim SunHt As Integer
+  Dim GHeight As Integer
   Dim MachSpeed As Single
 
   'DEF FnRan(x) = INT(RND(1) * x) + 1
@@ -116,10 +116,9 @@ Module Gorilla
     Return Int(Rnd(1) * x) + 1
   End Function
 
-  'DEF SEG = 0                         ' Set NumLock to ON
-
   Sub Main()
 
+    'DEF SEG = 0                         ' Set NumLock to ON
     'KeyFlags = PEEK(1047)
     'If (KeyFlags And 32) = 0 Then
     '  POKE 1047, KeyFlags Or 32
@@ -128,15 +127,15 @@ Module Gorilla
 
     'GOSUB InitVars
 
-InitVars:
-    pi# = 4 * ATN(1.0#)
+    'InitVars:
+    pi# = 4 * Atn(1.0#)
 
     'This is a clever way to pick the best graphics mode available
     On Error GoTo ScreenModeError
     Mode = 9
-    SCREEN(Mode)
+    Screen(Mode)
     On Error GoTo PaletteError
-    If Mode = 9 Then PALETTE(4, 0)   'Check for 64K EGA
+    If Mode = 9 Then Palette(4, 0)   'Check for 64K EGA
     On Error GoTo 0
 
     MachSpeed = CalcDelay()
@@ -150,19 +149,19 @@ InitVars:
       ReDim LBan&(8), RBan&(8), UBan&(8), DBan&(8)
 
       For i = 0 To 8
-        READ(LBan&(i))
+        Read(LBan&(i))
       Next i
 
       For i = 0 To 8
-        READ(DBan&(i))
+        Read(DBan&(i))
       Next i
 
       For i = 0 To 8
-        READ(UBan&(i))
+        Read(UBan&(i))
       Next i
 
       For i = 0 To 8
-        READ(RBan&(i))
+        Read(RBan&(i))
       Next i
 
       SunHt = 39
@@ -178,16 +177,16 @@ InitVars:
       ReDim GorL&(20), GorD&(20), GorR&(20)
 
       For i = 0 To 2
-        READ(LBan&(i))
+        Read(LBan&(i))
       Next i
       For i = 0 To 2
-        READ(DBan&(i))
+        Read(DBan&(i))
       Next i
       For i = 0 To 2
-        READ(UBan&(i))
+        Read(UBan&(i))
       Next i
       For i = 0 To 2
-        READ(RBan&(i))
+        Read(RBan&(i))
       Next i
 
       MachSpeed = MachSpeed * 1.3
@@ -295,8 +294,8 @@ InitVars:
 
 ScreenModeError:
     If Mode = 1 Then
-      CLS
-      LOCATE(10, 5)
+      Cls()
+      Locate(10, 5)
       Print("Sorry, you must have CGA, EGA color, or VGA graphics to play GORILLA.BAS")
       End
     Else
@@ -782,11 +781,12 @@ PaletteError:
     Center(4, "Q B a s i c    G O R I L L A S")
     COLOR(7)
     Center(6, "Copyright (C) Microsoft Corporation 1990")
-    Center(8, "Your mission is to hit your opponent with the exploding")
-    Center(9, "banana by varying the angle and power of your throw, taking")
-    Center(10, "into account wind speed, gravity, and the city skyline.")
-    Center(11, "The wind speed is shown by a directional arrow at the bottom")
-    Center(12, "of the playing field, its length relative to its strength.")
+    Center(8, "(Converted to VB.NET by Cory Smith)")
+    Center(10, "Your mission is to hit your opponent with the exploding")
+    Center(11, "banana by varying the angle and power of your throw, taking")
+    Center(12, "into account wind speed, gravity, and the city skyline.")
+    Center(13, "The wind speed is shown by a directional arrow at the bottom")
+    Center(14, "of the playing field, its length relative to its strength.")
     Center(24, "Press any key to continue")
 
     PLAY("MBT160O1L8CDEDCDL4ECC")
