@@ -1,8 +1,8 @@
 ﻿Public Class Compatibility
 
   ' Used in Print(), ...
-  Public Const SEMICOLON As String = ";"
-  Public Const COMMA As String = ","
+  Public Const SEMICOLON As String = " ;"
+  Public Const COMMA As String = " ,"
 
   ' Used in Screen(), ...
   Private Shared m_screenMode As Integer = 0
@@ -14,6 +14,17 @@
 
   ' Used in Close(), ...
   Private Shared m_filenum As New List(Of Integer) ' NOTE: This needs to be evolved more to handle state (number (possibly a dictionary), file path / device info, position, etc.
+
+  Public Enum PutMode
+    PSET
+    [XOR]
+  End Enum
+
+  Public Enum LineMode
+    None
+    B
+    BF
+  End Enum
 
   Private Sub New()
   End Sub
@@ -169,14 +180,18 @@
 
   ' CIRCLE (NOTE: Syntax Change)
 
-  Public Shared Sub Circle([step] As Boolean, x As Integer, y As Integer, radius As Integer, Optional color As Integer = -1, Optional start As Single = 0.00, Optional [stop] As Single = 0.00, Optional aspect As Single = 0.00)
+  Public Shared Sub Circle([step] As Boolean, x As Integer, y As Integer, radius As Integer, Optional color As Integer = -1, Optional start As Double = 0.00, Optional [stop] As Double = 0.00, Optional aspect As Double = 0.00)
     If [step] Then
       ' Calculate x, y as "offset"...
     End If
     Circle(x, y, radius, color, start, [stop], aspect)
   End Sub
 
-  Public Shared Sub Circle(x As Integer, y As Integer, radius As Integer, Optional color As Integer = -1, Optional start As Single = 0.00, Optional [stop] As Single = 0.00, Optional aspect As Single = 0.00)
+  Public Shared Sub Circle(x As Double, y As Double, radius As Double, Optional color As Integer = -1, Optional start As Double = 0.00, Optional [stop] As Double = 0.00, Optional aspect As Double = 0.00)
+    Circle(CInt(x), CInt(y), CInt(radius), color, start, [stop], aspect)
+  End Sub
+
+  Public Shared Sub Circle(x As Integer, y As Integer, radius As Integer, Optional color As Integer = -1, Optional start As Double = 0.00, Optional [stop] As Double = 0.00, Optional aspect As Double = 0.00)
     Throw New NotImplementedException()
   End Sub
 
@@ -740,10 +755,11 @@
   Public Structure QBCoord
     Public X As Integer
     Public Y As Integer
+    Public [Step] As Boolean
   End Structure
 
   Public Shared Function QBStep(x As Integer, y As Integer) As QBCoord
-    Return New QBCoord With {.X = x, .Y = y}
+    Return New QBCoord With {.X = x, .Y = y, .[Step] = True}
   End Function
 
   Public Shared Sub QBGet(coord1 As Integer(), coord2 As Integer(), buffer As Short())
@@ -760,6 +776,14 @@
 
     Throw New NotImplementedException()
 
+  End Sub
+
+  Public Shared Sub QBGet(x1 As Double, y1 As Double, x2 As Double, y2 As Double, array As System.Array)
+    QBGet(CInt(x1), CInt(y1), CInt(x2), CInt(y2), array)
+  End Sub
+
+  Public Shared Sub QBGet(x1 As Integer, y1 As Integer, x2 As Integer, y2 As Integer, array As System.Array)
+    Throw New NotImplementedException()
   End Sub
 
   ' GOSUB...RETURN
@@ -1024,6 +1048,14 @@
 
   ' LINE
 
+  Public Shared Sub Line(coord1 As Integer(), coord2 As Integer(), Optional color As Integer = -1, Optional lm As LineMode = LineMode.None, Optional style As Integer = -1)
+    Throw New NotImplementedException()
+  End Sub
+
+  Public Shared Sub Line(x1 As Integer, y1 As Integer, x2 As Integer, y2 As Integer, Optional color As Integer = -1, Optional lm As LineMode = LineMode.None, Optional style As Integer = -1)
+    Throw New NotImplementedException()
+  End Sub
+
   ' LINE INPUT
 
   Public Shared Sub LineInput(noCr As Boolean, prompt As String, ByRef var As String)
@@ -1226,7 +1258,19 @@
 
   ' PAINT
 
+  Public Shared Sub Paint([step] As Boolean, x As Integer, y As Integer, Optional color As Integer = -1, Optional border As Integer = -1, Optional background As Integer = -1)
+    Throw New NotImplementedException()
+  End Sub
+
+  Public Shared Sub Paint(x As Integer, y As Integer, Optional color As Integer = -1, Optional border As Integer = -1, Optional background As Integer = -1)
+    Throw New NotImplementedException()
+  End Sub
+
   ' PALETTE, PALETTE USING
+
+  Public Shared Sub Palette(color As Integer, display As Integer)
+    Throw New NotImplementedException()
+  End Sub
 
   ' PCOPY
 
@@ -1240,11 +1284,23 @@
 
   ' PLAY (Statement)
 
+  Public Shared Sub Play(commands As String)
+    Throw New NotImplementedException()
+  End Sub
+
   ' PLAY ON/OFF/STOP
 
   ' PMAP
 
   ' POINT
+
+  Public Shared Function Point(x As Integer, y As Integer) As Integer
+    Throw New NotImplementedException()
+  End Function
+
+  Public Shared Function Point(switch As Integer) As Integer
+    Throw New NotImplementedException()
+  End Function
 
   ' POKE
 
@@ -1256,6 +1312,22 @@
   End Function
 
   ' PRESET, PSET
+
+  Public Shared Sub PReset(coord1 As Integer(), Optional attribute As Integer = -1)
+    Throw New NotImplementedException()
+  End Sub
+
+  Public Shared Sub PReset(x As Integer, y As Integer, Optional attribute As Integer = -1)
+    Throw New NotImplementedException()
+  End Sub
+
+  Public Shared Sub PSet(coord1 As Integer(), Optional attribute As Integer = -1)
+    Throw New NotImplementedException()
+  End Sub
+
+  Public Shared Sub PSet(x As Integer, y As Integer, Optional attribute As Integer = -1)
+    Throw New NotImplementedException()
+  End Sub
 
   ' PRINT
 
@@ -1274,18 +1346,28 @@
 
       Dim isSemicolon = False
       Dim isComma = False
+      Dim isTab = False
 
-      If peek = SEMICOLON Then
-        isSemicolon = True
-      ElseIf peek = COMMA Then
-        isComma = True
+      If peek.StartsWith(" ") Then
+        If peek = SEMICOLON Then
+          isSemicolon = True
+        ElseIf peek = COMMA Then
+          isComma = True
+        Else
+          ' TAB(col)
+          isTab = True
+          Dim col = CInt(Right(peek, Len(peek) - 1))
+          Locate(, col Mod 80)
+        End If
       End If
 
       If isComma Then
         ' Need to handle "print zones"; each print zone is 14 characters in length).
       End If
 
-      If isSemicolon OrElse isComma Then
+      If isTab Then
+        ' Don't print anything...
+      ElseIf isSemicolon OrElse isComma Then
         Console.Write(value)
       Else
         Console.WriteLine(value)
@@ -1293,7 +1375,7 @@
 
       index += 1 ' Move the the next entry...
 
-      If isSemicolon OrElse isComma Then
+      If isSemicolon OrElse isComma OrElse isTab Then
         index += 1 ' Move to the next entry (skipping the semicolon or comma).
       End If
 
@@ -1306,6 +1388,7 @@
   End Sub
 
   Public Shared Sub Print(value As String, Optional noCr As Boolean = False)
+    'TODO: Add support to TAB(col)...
     If noCr Then
       Console.Write(value)
     Else
@@ -1326,6 +1409,18 @@
   ' PUT (File I/O)
 
   ' PUT (Graphics)
+
+  Public Shared Sub Put(x As Double, y As Double, array As System.Array, Optional action As PutMode = PutMode.XOR)
+    Put(CInt(x), CInt(y), array, action)
+  End Sub
+
+  Public Shared Sub Put(x As Integer, y As Integer, array As System.Array, Optional action As PutMode = PutMode.XOR)
+    Throw New NotImplementedException()
+  End Sub
+
+  Public Shared Sub Put(x As Integer, y As Integer, array As System.Array, subscript As Integer, Optional action As PutMode = PutMode.XOR)
+    Throw New NotImplementedException()
+  End Sub
 
   ' RANDOMIZE
 
@@ -1425,6 +1520,10 @@
   ' SHELL
 
   ' SIN
+
+  Public Shared Function Sin(angle As Double) As Double
+    Return Math.Sin(angle)
+  End Function
 
   ' SINGLE
 
@@ -1540,9 +1639,9 @@
 
   ' TAB
 
-  Public Shared Sub Tab(col As Integer)
-    Throw New NotImplementedException()
-  End Sub
+  Public Shared Function Tab(col As Integer) As String
+    Return $" {col}"
+  End Function
 
   ' TAN
 
