@@ -42,6 +42,7 @@ Public Class QuickVBWorkspace
     Dim opts As New VisualBasic.VisualBasicCompilationOptions(OutputKind.ConsoleApplication,
                                                               globalImports:=VisualBasic.GlobalImport.Parse({"System",
                                                                                                              "Microsoft.VisualBasic",
+                                                                                                             "QuickBasic.Constants",
                                                                                                              "QuickBasic.Compatibility"}),
                                                               optionExplicit:=False,
                                                               optionStrict:=VisualBasic.OptionStrict.Off,

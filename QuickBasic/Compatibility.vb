@@ -1,9 +1,5 @@
 ﻿Public Class Compatibility
 
-  ' Used in Print(), ...
-  Public Const SEMICOLON As String = " ;"
-  Public Const COMMA As String = " ,"
-
   ' Used in Screen(), ...
   Private Shared m_screenMode As Integer = 0
   Private Shared m_window As System.Windows.Forms.Form
@@ -1347,67 +1343,81 @@
 
   Public Shared Sub Print(ParamArray data() As Object)
 
+    Dim endsWithSemicolonOrComma = False
+
+    If data.Length > 0 AndAlso
+       TypeOf data(data.Length - 1) Is String AndAlso
+       ((data(data.Length - 1) = qbSemicolon) OrElse
+        (data(data.Length - 1) = qbComma)) Then
+      endsWithSemicolonOrComma = True
+    End If
+
     Dim index = 0
 
-    Do
+    If data.Length > 0 Then
+      Do
 
-      Dim value = data(index)
+        Dim value = data(index)
 
-      Dim peek As String = Nothing
-      If data.Length - 1 >= index + 1 Then
-        peek = data(index + 1)
-      End If
-
-      Dim isSemicolon = False
-      Dim isComma = False
-      Dim isTab = False
-
-      If peek?.StartsWith(" ") Then
-        If peek = SEMICOLON Then
-          isSemicolon = True
-        ElseIf peek = COMMA Then
-          isComma = True
+        If TypeOf value Is String AndAlso value?.Startswith(" ") Then
+          If value = qbSemicolon Then
+            ' Print nothing, do nothing, just skip.
+          ElseIf value = qbComma Then
+            ' Move "cursor" forward to the next "print zone"; each print zone is 14 characters in length.
+            Dim col = Pos(1)
+            col = ((col - (col Mod 14)) + 14)
+            If col > 80 Then
+              Console.WriteLine()
+              col = 1
+            End If
+            Locate(, col)
+          Else
+            ' TAB(col)
+            Dim col = CInt(Right(value, Len(value) - 1))
+            Locate(, col Mod 80)
+          End If
         Else
-          ' TAB(col)
-          isTab = True
-          Dim col = CInt(Right(peek, Len(peek) - 1))
-          Locate(, col Mod 80)
+          If TypeOf value Is Short OrElse
+             TypeOf value Is Integer OrElse
+             TypeOf value Is Long OrElse
+             TypeOf value Is Single OrElse
+             TypeOf value Is Double Then
+            ' Numeric values displayed by PRINT are always followed by a blank space.  If the number is positive, PRINT precedes it with a space; otherwise, it precedes the number with a minus sign.
+            'TODO: QB displays numeric values in fixed-point format if it can.  If a single-preceision number can be represented with 7 digits or less, it is displayed in fixed-point format.  Numbers of more than 7 digits are displayed in scientific notation.
+            '        a! = 1234567: PRINT a! displays 1234567
+            '        a! = 12345678: PRINT a! displays 1.2345678E+07
+            '      This also applies to double-precision numbers except that they are displayed in scientific notation only when the number has more than 16 digits.
+            If value < 0 Then
+              Console.Write($"{value} ")
+            Else
+              Console.Write($" {value} ")
+            End If
+          Else
+            If index = 0 Then
+              ' If the data item is too long for the part of the line remaining after the cursor, PRINT issues a linefeed before sending the data to the screen.
+              '   LOCATE 10, 40: PRINT STRING$(60, "=")
+              If Pos(1) + Len(value) > 80 Then
+                Console.WriteLine()
+              End If
+            End If
+            Console.Write(value)
+          End If
         End If
-      End If
 
-      If isComma Then
-        ' Need to handle "print zones"; each print zone is 14 characters in length).
-      End If
+        index += 1
 
-      If isTab Then
-        ' Don't print anything...
-      ElseIf isSemicolon OrElse isComma Then
-        Console.Write(value)
-      Else
-        Console.WriteLine(value)
-      End If
+        If index > data.Length - 1 Then
+          Exit Do
+        End If
 
-      index += 1 ' Move the the next entry...
+      Loop
 
-      If isSemicolon OrElse isComma OrElse isTab Then
-        index += 1 ' Move to the next entry (skipping the semicolon or comma).
-      End If
-
-      If index > data.Length - 1 Then
-        Exit Do
-      End If
-
-    Loop
-
-  End Sub
-
-  Public Shared Sub Print(value As String, Optional noCr As Boolean = False)
-    'TODO: Add support to TAB(col)...
-    If noCr Then
-      Console.Write(value)
-    Else
-      Console.WriteLine(value)
     End If
+
+    If Not endsWithSemicolonOrComma Then
+      Console.WriteLine()
+    End If
+
   End Sub
 
   ' PRINT #

@@ -356,7 +356,7 @@ PaletteError:
   Sub Center(Row As Integer, Text$)
     Col = MaxCol \ 2
     LOCATE(Row, Col - (Len(Text$) / 2 + 0.5))
-    Print(Text$, True) ';
+    Print(Text$, SEMICOLON) ';
   End Sub
 
   ' DoExplosion:
@@ -401,11 +401,11 @@ PaletteError:
     End If
 
     LOCATE(2, LocateCol)
-    Print("Angle:", True) ';
+    Print("Angle:", SEMICOLON) ';
     Angle# = GetNum#(2, LocateCol + 7)
 
     LOCATE(3, LocateCol)
-    Print("Velocity:", True) ';
+    Print("Velocity:", SEMICOLON) ';
     Velocity = GetNum#(3, LocateCol + 10)
 
     If PlayerNum = 2 Then
@@ -415,9 +415,9 @@ PaletteError:
     'Erase input
     For i = 1 To 4
       LOCATE(i, 1)
-      Print(Space(30 \ (80 \ MaxCol)), True) ';
-      LOCATE(i, (50 \ (80 \ MaxCol)))
-      Print(Space(30 \ (80 \ MaxCol)), True) ';
+      Print(Space(30 \ (80 \ MaxCol)), SEMICOLON) ';
+      Locate(i, (50 \ (80 \ MaxCol)))
+      Print(Space(30 \ (80 \ MaxCol)), SEMICOLON) ';
     Next
 
     SunHit = False
@@ -621,16 +621,16 @@ PaletteError:
     End If
 
     Do
-      LOCATE(12, 56) : Print(Space(25), True) ';
-      LOCATE(12, 13)
+      Locate(12, 56) : Print(Space(25), SEMICOLON) ';
+      Locate(12, 13)
       Input("Play to how many total points (Default = 3)", game$)
       NumGames = Val(Left(game$, 2))
     Loop Until NumGames > 0 And Len(game$) < 3 Or Len(game$) = 0
     If NumGames = 0 Then NumGames = 3
 
     Do
-      LOCATE(14, 53) : Print(Space(28), True) ';
-      LOCATE(14, 17)
+      Locate(14, 53) : Print(Space(28), SEMICOLON) ';
+      Locate(14, 17)
       Input("Gravity in Meters/Sec (Earth = 9.8)", grav$)
       gravity# = Val(grav$)
     Loop Until gravity# > 0 Or Len(grav$) = 0
@@ -786,7 +786,7 @@ PaletteError:
     Center(11, "banana by varying the angle and power of your throw, taking")
     Center(12, "into account wind speed, gravity, and the city skyline.")
     Center(13, "The wind speed is shown by a directional arrow at the bottom")
-    Center(14, "of the playing field, its length relative to its strength.")
+    Center(12, "of the playing field, its length relative to its strength.")
     Center(24, "Press any key to continue")
 
     PLAY("MBT160O1L8CDEDCDL4ECC")
@@ -1197,22 +1197,22 @@ PaletteError:
     While INKEY$ = ""
       For i = 1 To 5
         LOCATE(1, 1)                             'print horizontal sparkles
-        Print(Mid(A$, i, 80), True) ';
-        LOCATE(22, 1)
-        Print(Mid(A$, 6 - i, 80), True) ';
+        Print(Mid(A$, i, 80), SEMICOLON) ';
+        Locate(22, 1)
+        Print(Mid(A$, 6 - i, 80), SEMICOLON) ';
 
         For b = 2 To 21                         'Print Vertical sparkles
           c = (i + b) Mod 5
           If c = 1 Then
             LOCATE(b, 80)
-            Print("*", True) ';
-            LOCATE(23 - b, 1)
-            Print("*", True) ';
+            Print("*", SEMICOLON) ';
+            Locate(23 - b, 1)
+            Print("*", SEMICOLON) ';
           Else
             LOCATE(b, 80)
-            Print(" ", True) ';
-            LOCATE(23 - b, 1)
-            Print(" ", True) ';
+            Print(" ", SEMICOLON) ';
+            Locate(23 - b, 1)
+            Print(" ", SEMICOLON) ';
           End If
         Next b
       Next i

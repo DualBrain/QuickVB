@@ -6,7 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{47DFA9A5-9905-4DF9-9F52-4C996D76877E}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <StartupObject>Gorilla</StartupObject>
+    <StartupObject>Main</StartupObject>
     <RootNamespace>
     </RootNamespace>
     <AssemblyName>Gorilla</AssemblyName>
@@ -61,6 +61,7 @@
     <Import Include="Microsoft.VisualBasic" />
     <Import Include="QuickBasic" />
     <Import Include="QuickBasic.Compatibility" />
+    <Import Include="QuickBasic.Constants" />
     <Import Include="System" />
     <Import Include="System.Collections" />
     <Import Include="System.Collections.Generic" />
@@ -72,6 +73,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Gorilla.vb" />
+    <Compile Include="Main.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
@@ -87,6 +89,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Compile Include="PrintTests.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="My Project\Resources.resx">
