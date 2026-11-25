@@ -1,0 +1,14 @@
+# Normalize all text files to LF, in the repository and in working trees, on every OS.
+* text=auto eol=lf
+
+# Never touch binaries.
+*.png   binary
+*.jpg   binary
+*.gif   binary
+*.ico   binary
+*.docx  binary
+*.zip   binary
+*.exe   binary
+*.dll   binary
+*.pdb   binary
+*.nupkg binary
