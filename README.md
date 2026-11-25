@@ -52,40 +52,54 @@ Have fun!
 
 ---
 
-Since the original post, they had enough feedback that they decided to release QuickVB as an open-source project! (This was done using CodePlex - which has since been "shutdown".)
+Since the original post, the team had enough feedback that they released QuickVB as an open-source project! (This was done using CodePlex - which has since been "shutdown".) There was a lot of work left to be done to turn the sample into an environment (IDE) where you can really spend some quality time, and this GitHub project serves to re-ignite and continue that effort.
 
-There's a lot of work left to be done to turn this sample into an environment (IDE) where you can really spend some quality time! Some key features that are left: 
+## Well, that was 2014... today we can
 
-* Opening/saving of arbitrary files and projects - pretty important for an editor (WIP)
-* Support for navigating around large projects and adding/removing code files
+The sample above was a snapshot: a fun demo that lived and died inside Visual Studio 2013. This project picks it up and keeps going. QuickVB now runs on .NET 10 and Roslyn 5, on Windows and Linux (macOS is untested), in a real terminal, and it has grown from a demo into an editor and debugger you can write and run programs in.
+
+The original authors' wish list, and where it stands:
+
+* ~~Opening/saving of arbitrary files and projects~~ (done; `.bas`, `.vb`, `.vbproj`, `.sln` and `.slnx`)
+* ~~Support for navigating around large projects and adding/removing code files~~ (done; see *Programs of several files*)
 * General perf improvements when working on multi-file programs like the QuickVB solution itself
 * QuickBasic compatibility library, to ease porting of classic programs like GORILLA.BAS (WIP)
 
-This is where this GitHub project comes in; it serves to re-ignite and continue this effort...
+And this GitHub project's own list:
 
 * ~~Move to latest release of "Roslyn"~~ (done: Roslyn 5.x)
 * ~~Move to newer version of .NET~~ (done: .NET 10)
-* Migrate from being a "demo" to a full-featured (for a Console app) IDE
+* Migrate from being a "demo" to a full-featured (for a Console app) IDE (WIP)
 * Match menus and other UI elements to original QuickBASIC IDE (WIP)
-* Improve ConsoleGUI to support "popup" windows; needed for additional functionality
-* Improve ConsoleGUI to support activation of additional panels (help)
+* ~~Improve ConsoleGUI to support "popup" windows; needed for additional functionality~~ (done: dialogs, file dialogs, message boxes)
+* ~~Improve ConsoleGUI to support activation of additional panels (help)~~ (done: the Help window, the Watch pane and View > Split)
 * Integrate "help" with online Microsoft documentation
 * ~~Enable "Roslyn" by default~~ (done; *Options > Disable Roslyn* switches it off)
-* Actually port GORILLA.BAS as an included sample
 * ~~Remove "self-editing".~~ (done)
+* Debug > Trace On, History On (Shift+F8 / Shift+F10) and Set Next Statement
+* Replace the QuickBasic library included here with the QB.Compatibility NuGet package
+* Actually port GORILLA.BAS as an included sample (follows the library change above)
+* Install as a dotnet tool (follows the library change above)
 
-Requirements:
+## What QuickVB does today
+
+* **Roslyn powered editing** - semantic colorization (Classification API), completion lists (Recommendations API) and compiler diagnostics (Diagnostics API) as you type. They are on by default; use *Disable Roslyn* / *Enable Roslyn* on the *Options* menu to turn them off and on.
+* **Windows and Linux terminals** - VT/ANSI rendering with the classic VGA palette, UTF-8 box characters and the alternate screen, or the classic Windows console renderer.
+* **Mouse** - menus, dialogs, lists, scroll bars, selecting and scrolling in the editor.
+* **A real editor** - selection, clipboard, overtype, Tab indent, WordStar keys, markers, search for the selected text and undo.
+* **Programs of several files, and projects** - load, create, unload and save files; open a `.vbproj`, `.sln` or `.slnx`; choose the main module; jump between procedures across files.
+* **View > Split** - two editor windows, kept in step when they show the same file.
+* **A debugger** - breakpoints, step into/over/out, run to cursor, Watch window, watchpoints, Instant Watch, the Calls menu, Break on Errors and the program's output screen.
+* **Built-in help** - F1 opens QuickBASIC's keyboard reference, the command line and per-dialog help.
+* **A POSIX style command line** - open a program, run it on start, pass `COMMAND$`.
+* **One file to copy** - a single executable, with a portable mode that keeps settings beside it.
+
+Each of these is described below.
+
+## Requirements
 
 * [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) (Windows or Linux) - build with `dotnet build QuickVB.sln`, run with `dotnet run --project QuickVB`.
   Programs written inside QuickVB are compiled against the .NET 10 reference assemblies and run with the `dotnet` host. Make EXE File writes a launcher for the machine you are on (`.exe` on Windows, an executable file on Linux).
-
-## QuickVB Features
-
-All of the features below are powered by the [.NET Compiler Platform ("Roslyn")](https://github.com/dotnet/roslyn/) APIs. They are on by default; use *Disable Roslyn* / *Enable Roslyn* on the *Options* menu to turn them off and on.
-
-* Semantic code colorization (powered by Roslyn's Classification API)
-* Completion lists (powered by Roslyn's Recommendations API)
-* Compiler diagnostics (powered by Roslyn's Diagnostics API)
 
 ## A single file to copy (xcopy deployment)
 
