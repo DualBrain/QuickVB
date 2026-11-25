@@ -131,4 +131,23 @@ Public Class QBLibraryTests
     Assert.True(File.Exists(BinFile(native)))
   End Sub
 
+  ' GORILLA.BAS, ported to QB.Compatibility, is the sample that shows the whole thing working: it must compile in QuickVB as it is
+  <Fact>
+  Public Sub TheGorillaSampleCompilesInQuickVBAndCarriesTheWindowLibraries()
+    Dim folder = AppContext.BaseDirectory
+    Dim source As String = Nothing
+    Do While folder IsNot Nothing
+      Dim candidate = Path.Combine(folder, "Gorilla", "GORILLA.vb")
+      If File.Exists(candidate) Then source = candidate : Exit Do
+      folder = Path.GetDirectoryName(folder)
+    Loop
+    If source Is Nothing Then Return   ' running without the source tree
+
+    Dim built = Build(File.ReadAllText(source), "Gorilla")
+
+    Assert.Empty(built.Diagnostics.Where(Function(d) d.Severity = DiagnosticSeverity.Error))
+    Assert.Empty(QBLibrary.MissingImports(built.Workspace.CurrentSolution.Projects.First().GetCompilationAsync().Result))
+    Assert.True(File.Exists(BinFile("QB.Compatibility.Sdl.dll")))
+  End Sub
+
 End Class
