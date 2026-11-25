@@ -32,17 +32,28 @@ Namespace ConsoleGUI
 
           control.Parent = Me
 
-          If Me.Fill Then
-            control.Left = Me.PaddingLeft
-            control.Top = Me.PaddingTop
-            control.Width = Me.Width - Me.PaddingLeft - Me.PaddingRight
-            control.Height = Me.Height - Me.PaddingTop - Me.PaddingBottom
-          End If
+          Me.ApplyFill(control)
 
         Next
 
       End If
 
+    End Sub
+
+    Private Sub ApplyFill(control As Control)
+      If Me.Fill Then
+        control.Left = Me.PaddingLeft
+        control.Top = Me.PaddingTop
+        control.Width = Math.Max(0, Me.Width - Me.PaddingLeft - Me.PaddingRight)
+        control.Height = Math.Max(0, Me.Height - Me.PaddingTop - Me.PaddingBottom)
+      End If
+    End Sub
+
+    ''' <summary>Re-applies the fill layout to the children; call after changing this container's size.</summary>
+    Public Sub LayoutChildren()
+      For Each control In Me.Controls
+        Me.ApplyFill(control)
+      Next
     End Sub
 
     Public Property Controls() As ObservableCollection(Of Control)

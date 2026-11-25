@@ -67,6 +67,13 @@ Namespace ConsoleGUI
     Public Property BackgroundColor() As ConsoleColor
     Public Property ForegroundColor() As ConsoleColor
 
+    ''' <summary>Text for the status bar while this control is the active popup (Nothing: the screen's usual status).</summary>
+    Public Overridable ReadOnly Property StatusHint As String
+      Get
+        Return Nothing
+      End Get
+    End Property
+
     Public Overridable Sub UpdateCursor(screen As Screen)
     End Sub
 
@@ -86,11 +93,36 @@ Namespace ConsoleGUI
     Public Overridable Sub OnMouseDown(sender As Object, e As MouseEvent)
     End Sub
 
+    ''' <summary>The button that went down over this control was released (wherever the pointer is now).</summary>
+    Public Overridable Sub OnMouseUp(sender As Object, e As MouseEvent)
+    End Sub
+
+    ''' <summary>The pointer moved while the button that went down over this control is still held.</summary>
+    Public Overridable Sub OnMouseDrag(sender As Object, e As MouseEvent)
+    End Sub
+
+    ''' <summary>
+    ''' The wheel turned over this control. Unless the control scrolls itself the wheel works like the Up / Down keys,
+    ''' which scrolls lists and moves through menus.
+    ''' </summary>
+    Public Overridable Sub OnMouseWheel(sender As Object, e As MouseEvent)
+
+      Dim key = If(e.WheelDelta > 0, VirtualKey.VK_UP, VirtualKey.VK_DOWN)
+      Dim down As New KeyEvent(True, ChrW(0), 1, key, 0)
+
+      Me.OnBeforeKeyDown(sender, down)
+      If Not down.Handled Then Me.OnAfterKeyDown(sender, down)
+
+      Screen.GetScreen()?.Invalidate()
+
+    End Sub
+
     Public Overridable Function HitTest(x As Integer, y As Integer) As Control
-      If x >= Me.Left AndAlso
-         x <= Me.Right AndAlso
-         y >= Me.Top AndAlso
-         y <= Me.Bottom Then
+      If Me.Visible AndAlso
+         x >= Me.ScreenLeft AndAlso
+         x <= Me.ScreenRight AndAlso
+         y >= Me.ScreenTop AndAlso
+         y <= Me.ScreenBottom Then
         Return Me
       Else
         Return Nothing

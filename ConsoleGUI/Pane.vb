@@ -46,7 +46,7 @@ Namespace ConsoleGUI
 
       Dim fg, bg As ConsoleColor
 
-      If screen.ActiveControl.Parent Is Me AndAlso screen.Theme = ControlTheme.Basic Then
+      If screen.ActiveControl.Parent Is Me Then
         fg = Me.BackgroundColor
         bg = Me.ForegroundColor
       Else

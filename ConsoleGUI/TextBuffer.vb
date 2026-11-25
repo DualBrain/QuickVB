@@ -37,7 +37,14 @@ Namespace ConsoleGUI
       End Get
       Set(value As String)
 
-        Dim textLines = value.Split({vbCrLf, vbCr, vbLf}, StringSplitOptions.None).Select(Function(s) New TextBufferLine With {.Text = s})
+        Dim textLines = value.Split({vbCrLf, vbCr, vbLf}, StringSplitOptions.None).Select(Function(s) New TextBufferLine With {.Text = s}).ToList()
+
+        ' the marks of the lines (breakpoints ...) stay where they are as long as lines are neither added nor removed
+        If Me._lines IsNot Nothing AndAlso Me._lines.Count = textLines.Count Then
+          For i = 0 To textLines.Count - 1
+            textLines(i).Marks = Me._lines(i).Marks
+          Next
+        End If
 
         Me.InitLines(textLines)
 
@@ -185,12 +192,23 @@ Namespace ConsoleGUI
 
   End Class
 
+  ''' <summary>The marks a line can have; the view shows them in colours of their own.</summary>
+  <Flags>
+  Public Enum LineMarks As Integer
+    None = 0
+    Breakpoint = 1
+    CurrentStatement = 2
+  End Enum
+
   Public Class TextBufferLine
 
     ' TODO: Text should only really be set from the TextBuffer methods
 
     Public Property Text() As String
     Public Property ColorSpans() As List(Of ColorSpan)
+
+    ''' <summary>Bit flags a program can put on a line (see <see cref="LineMarks"/>); they move with the line.</summary>
+    Public Property Marks() As Integer
 
     Friend Sub New()
       Me.Text = ""

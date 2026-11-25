@@ -15,6 +15,9 @@ Namespace ConsoleGUI
     Public Property DropDownMenu() As Menu
     Public Property HighlightAccelerator() As Boolean
     Public Property Action() As Action
+
+    ''' <summary>Shown greyed out although it does something (a command that isn't implemented yet says so when chosen).</summary>
+    Public Property Dimmed() As Boolean
     Public Property ParentMenu() As Menu
 
     Private _name As String
@@ -198,19 +201,13 @@ Namespace ConsoleGUI
 
       Dim fg, bg, acceleratorColor As ConsoleColor
 
-      If screen.Theme = ControlTheme.CSharp Then
-        fg = If(Me._active, ConsoleColor.Black, ConsoleColor.Black)
-        bg = If(Me._active, ConsoleColor.DarkGreen, ConsoleColor.Gray)
-        acceleratorColor = ConsoleColor.DarkRed
-      Else
-        fg = If(Me._active, ConsoleColor.Gray, ConsoleColor.Black)
-        bg = If(Me._active, ConsoleColor.Black, ConsoleColor.Gray)
-        acceleratorColor = ConsoleColor.White
-      End If
+      fg = If(Me._active, ConsoleColor.Gray, ConsoleColor.Black)
+      bg = If(Me._active, ConsoleColor.Black, ConsoleColor.Gray)
+      acceleratorColor = ConsoleColor.White
 
-      Dim grayedOut = Me.DropDownMenu Is Nothing AndAlso
-                      Me.Action Is Nothing AndAlso
-                      Not Me.Separator
+      Dim grayedOut = Me.Dimmed OrElse (Me.DropDownMenu Is Nothing AndAlso
+                                        Me.Action Is Nothing AndAlso
+                                        Not Me.Separator)
 
       If grayedOut Then
         fg = ConsoleColor.DarkGray
@@ -220,7 +217,7 @@ Namespace ConsoleGUI
         screen.DrawLeftTee(Me.ScreenLeft, Me.ScreenTop, fg, bg)
         screen.DrawRightTee(Me.ScreenRight, Me.ScreenTop, fg, bg)
         screen.DrawHorizontalLine(Me.ScreenLeft + 1, Me.ScreenRight - 1, Me.ScreenTop, fg, bg)
-      ElseIf (Not Me.HighlightAccelerator AndAlso screen.Theme <> ControlTheme.CSharp) OrElse grayedOut Then
+      ElseIf Not Me.HighlightAccelerator OrElse grayedOut Then
         screen.DrawHorizontalLine(Me.ScreenLeft, Me.ScreenRight, Me.ScreenTop, " "c, fg, bg)
         screen.DrawString(Me.ScreenLeft + 1, Me.ScreenTop, Me.Name, fg, bg)
       Else

@@ -25,6 +25,12 @@ Namespace ConsoleGUI
       End Get
     End Property
 
+    Public ReadOnly Property MenuItems() As IReadOnlyList(Of MenuItem)
+      Get
+        Return Me._menuItems
+      End Get
+    End Property
+
     Public Sub SetMenuItems(ParamArray menuItems() As MenuItem)
       Me._menuItems = menuItems.ToList()
       For Each menuItem In menuItems

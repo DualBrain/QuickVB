@@ -18,7 +18,7 @@ Namespace ConsoleGUI
     Public Property ActiveControl() As Control
     Public Property PopupControl() As Control
 
-    Private ReadOnly _console As Win32Console
+    Private ReadOnly _console As IConsoleDriver
     Private _disposed As Boolean = False
     Private _cursorHideCount As Integer
 
@@ -33,8 +33,6 @@ Namespace ConsoleGUI
     Public Event MouseDown As EventHandler(Of MouseEvent)
     Public Event Resize As EventHandler(Of BufferSizeEvent)
 
-    Public Property Theme() As ControlTheme
-
     Private Shared _screen As Screen = Nothing
 
     Public Shared Sub NavigateTo(screen As Screen)
@@ -46,17 +44,46 @@ Namespace ConsoleGUI
       Return _screen
     End Function
 
+    ''' <summary>Creates a screen on the real console: VT/ANSI output where available, else the classic Windows console.</summary>
     Protected Sub New()
+      Me.New(CreateWin32Console())
+    End Sub
 
-      Me.ActiveControl = Me
+    Private Shared Function CreateWin32Console() As IConsoleDriver
+
+      If Console.IsInputRedirected OrElse Console.IsOutputRedirected Then
+        Throw New InvalidOperationException("ConsoleGUI needs an interactive console (input and output must not be redirected).")
+      End If
+
+      ' Linux and macOS: a raw terminal for input (keys, mouse, resize) and VT/ANSI sequences for output.
+      If Not OperatingSystem.IsWindows() Then
+        Return VtConsole.TryCreateForTerminal(New UnixConsole())
+      End If
 
       ' TODO: Save existing console buffer before resizing to fit window,
       ' TODO: then restore it in Dispose()
 
-      Console.CursorSize = 8
+      ' The buffer must match the window (no scrollback) so that mouse and size events line up with what is drawn.
       Console.SetBufferSize(Console.WindowWidth, Console.WindowHeight)
 
-      Me._console = New Win32Console()
+      Dim win32 As New Win32Console()
+
+      ' Draw with VT/ANSI escape sequences (true colour, UTF-8, alternate screen) when the terminal supports them;
+      ' set QUICKVB_RENDERER=win32 to force the classic console renderer.
+      Dim vt = VtConsole.TryCreateForTerminal(win32)
+      If vt IsNot Nothing Then Return vt
+
+      Console.CursorSize = 8
+      Return win32
+
+    End Function
+
+    ''' <summary>Creates a screen on any console driver (for example a <see cref="HeadlessConsole"/> in tests).</summary>
+    Protected Sub New(driver As IConsoleDriver)
+
+      Me.ActiveControl = Me
+
+      Me._console = driver
       Me._console.EnableInputEvents()
 
       Dim [dim] = Me._console.GetBufferDimensions()
@@ -85,6 +112,50 @@ Namespace ConsoleGUI
       End If
     End Sub
 
+    ' The control that got the last button press: it also gets the drag and the release.
+    Private _mouseCapture As Control
+
+    Private Sub RouteMouse(mouseEvent As MouseEvent)
+
+      Dim flags = mouseEvent.MouseEventFlags
+
+      If (flags And (MouseEventFlags.MOUSE_WHEELED Or MouseEventFlags.MOUSE_HWHEELED)) <> 0 Then
+
+        If (flags And MouseEventFlags.MOUSE_WHEELED) = 0 Then Return
+
+        ' the dialog on top, otherwise what is under the pointer, otherwise the control with the focus
+        Dim target = Me.PopupControl
+        If target Is Nothing Then target = Me.HitTest(mouseEvent.X, mouseEvent.Y)
+        If target Is Nothing Then target = Me.ActiveControl
+
+        If target IsNot Nothing Then target.OnMouseWheel(Me, mouseEvent)
+
+      ElseIf (flags And MouseEventFlags.MOUSE_MOVED) <> 0 Then
+
+        If mouseEvent.ButtonState <> 0 AndAlso Me._mouseCapture IsNot Nothing Then
+          Me._mouseCapture.OnMouseDrag(Me, mouseEvent)
+        End If
+
+      ElseIf mouseEvent.ButtonState <> 0 Then ' pressed (or pressed again: a double click)
+
+        RaiseEvent MouseDown(Me, mouseEvent)
+
+        Dim hit = Me.HitTest(mouseEvent.X, mouseEvent.Y)
+        Me._mouseCapture = hit
+
+        If hit IsNot Nothing Then hit.OnMouseDown(Me, mouseEvent)
+
+      Else ' released
+
+        Dim captured = Me._mouseCapture
+        Me._mouseCapture = Nothing
+
+        If captured IsNot Nothing Then captured.OnMouseUp(Me, mouseEvent)
+
+      End If
+
+    End Sub
+
     Public Sub DoIOLoop()
 
       Me.UIThread = Thread.CurrentThread
@@ -100,11 +171,15 @@ Namespace ConsoleGUI
 
       Me._invalid = True
 
+      ' Let the owner lay out for the current size before the first frame.
+      RaiseEvent Resize(Me, New BufferSizeEvent([dim].Width, [dim].Height))
+
       Do
 
         RaiseEvent BeforeRender(Me, EventArgs.Empty)
 
         If Me._invalid Then
+          Me._backbuffer.ClearBackbuffer(Me.ForegroundColor, Me.BackgroundColor)
           Me.Render(Me)
           Me._backbuffer.CopyToConsole(Me._console)
           Me._invalid = False
@@ -126,6 +201,9 @@ Namespace ConsoleGUI
         ' Get event
         ' Route event for handling
         Dim consoleEvent = Me._console.GetNextEvent()
+
+        ' A driver with no more input (a headless console) ends the loop.
+        If consoleEvent Is Nothing Then Exit Do
 
         If TypeOf consoleEvent Is KeyEvent Then
 
@@ -164,15 +242,7 @@ Namespace ConsoleGUI
 
         ElseIf TypeOf consoleEvent Is MouseEvent Then
 
-          Dim mouseEvent = CType(consoleEvent, MouseEvent)
-
-          If mouseEvent.MouseEventFlags = 0 AndAlso mouseEvent.ButtonState <> 0 Then ' pressed
-            RaiseEvent MouseDown(Me, mouseEvent)
-            Dim hit = Me.HitTest(mouseEvent.X, mouseEvent.Y)
-            If hit IsNot Nothing Then
-              hit.OnMouseDown(Me, mouseEvent)
-            End If
-          End If
+          Me.RouteMouse(CType(consoleEvent, MouseEvent))
 
         ElseIf TypeOf consoleEvent Is BufferSizeEvent Then
 
@@ -240,23 +310,43 @@ Namespace ConsoleGUI
       End If
     End Sub
 
+    Private _consoleSuspended As Boolean
+
+    ''' <summary>True while the terminal belongs to another program (a program that was started from here).</summary>
+    Public ReadOnly Property IsConsoleSuspended() As Boolean
+      Get
+        Return Me._consoleSuspended
+      End Get
+    End Property
+
+    ''' <summary>Gives the terminal to another program (it leaves the alternate screen and the raw input mode); pair with <see cref="ReactivateConsole"/>.</summary>
+    Public Sub SuspendConsole()
+      Me._console.Suspend()
+      Me._consoleSuspended = True
+    End Sub
+
+    ''' <summary>Takes the terminal back after <see cref="SuspendConsole"/> and redraws everything.</summary>
+    Public Sub ReactivateConsole()
+      Me._console.Reactivate()
+      Me._consoleSuspended = False
+      Me.RestoreScreen()
+    End Sub
+
     Public Sub RestoreScreen()
       Me._backbuffer.RestoreBufferToScreen(Me._console)
     End Sub
 
     Public Sub DrawString(column As Integer, row As Integer, str As String, fg As ConsoleColor, bg As ConsoleColor)
 
-      ' Clipping is expected to occur at a higher level
+      ' Anything outside the screen is clipped.
 
-      If column + str.Length > Me._backbuffer.Width OrElse
-         column < 0 OrElse
-         row >= Me._backbuffer.Height OrElse
-         row < 0 Then
-        Throw New ArgumentOutOfRangeException()
-      End If
+      If row < 0 OrElse row >= Me._backbuffer.Height Then Return
 
       For i = 0 To str.Length - 1
-        Me._backbuffer.SetChar(column + i, row, str.Chars(i), fg, bg)
+        Dim c = column + i
+        If c >= 0 AndAlso c < Me._backbuffer.Width Then
+          Me._backbuffer.SetChar(c, row, str.Chars(i), fg, bg)
+        End If
       Next
 
     End Sub
@@ -279,59 +369,34 @@ Namespace ConsoleGUI
     End Sub
 
     Friend Sub DrawTopLeftCorner(column As Integer, row As Integer, fg As ConsoleColor, bg As ConsoleColor)
-      If Me.Theme = ControlTheme.Basic Then
-        Me._backbuffer.SetChar(column, row, "┌"c, fg, bg)
-      Else
-        Me._backbuffer.SetChar(column, row, "╔"c, fg, bg)
-      End If
+      Me._backbuffer.SetChar(column, row, "┌"c, fg, bg)
     End Sub
 
     Friend Sub DrawTopRightCorner(column As Integer, row As Integer, fg As ConsoleColor, bg As ConsoleColor)
-      If Me.Theme = ControlTheme.Basic Then
-        Me._backbuffer.SetChar(column, row, "┐"c, fg, bg)
-      Else
-        Me._backbuffer.SetChar(column, row, "╗"c, fg, bg)
-      End If
+      Me._backbuffer.SetChar(column, row, "┐"c, fg, bg)
     End Sub
 
     Friend Sub DrawBottomLeftCorner(column As Integer, row As Integer, fg As ConsoleColor, bg As ConsoleColor)
-      If Me.Theme = ControlTheme.Basic Then
-        Me._backbuffer.SetChar(column, row, "└"c, fg, bg)
-      Else
-        Me._backbuffer.SetChar(column, row, "╚"c, fg, bg)
-      End If
+      Me._backbuffer.SetChar(column, row, "└"c, fg, bg)
     End Sub
 
     Friend Sub DrawBottomRightCorner(column As Integer, row As Integer, fg As ConsoleColor, bg As ConsoleColor)
-      If Me.Theme = ControlTheme.Basic Then
-        Me._backbuffer.SetChar(column, row, "┘"c, fg, bg)
-      Else
-        Me._backbuffer.SetChar(column, row, "╝"c, fg, bg)
-      End If
+      Me._backbuffer.SetChar(column, row, "┘"c, fg, bg)
     End Sub
 
     Friend Sub DrawLeftTee(column As Integer, row As Integer, fg As ConsoleColor, bg As ConsoleColor)
-      If Me.Theme = ControlTheme.Basic Then
-        Me._backbuffer.SetChar(column, row, "├"c, fg, bg)
-      Else
-        Me._backbuffer.SetChar(column, row, "╠"c, fg, bg)
-      End If
+      Me._backbuffer.SetChar(column, row, "├"c, fg, bg)
     End Sub
 
     Friend Sub DrawRightTee(column As Integer, row As Integer, fg As ConsoleColor, bg As ConsoleColor)
-      If Me.Theme = ControlTheme.Basic Then
-        Me._backbuffer.SetChar(column, row, "┤"c, fg, bg)
-      Else
-        Me._backbuffer.SetChar(column, row, "╣"c, fg, bg)
-      End If
+      Me._backbuffer.SetChar(column, row, "┤"c, fg, bg)
     End Sub
 
+    ''' <summary>What the status bar says while any dialog is open (QBasic's wording).</summary>
+    Public Const DialogStatusHint As String = "F1=Help  Enter=Execute  Esc=Cancel  Tab=Next Field  Arrow=Next Item"
+
     Friend Sub DrawHorizontalLine(left As Integer, right As Integer, row As Integer, fg As ConsoleColor, bg As ConsoleColor)
-      If Me.Theme = ControlTheme.Basic Then
-        Me.DrawHorizontalLine(left, right, row, "─"c, fg, bg)
-      Else
-        Me.DrawHorizontalLine(left, right, row, "═"c, fg, bg)
-      End If
+      Me.DrawHorizontalLine(left, right, row, "─"c, fg, bg)
     End Sub
 
     Friend Sub DrawHorizontalLine(left As Integer, right As Integer, row As Integer, ch As Char, fg As ConsoleColor, bg As ConsoleColor)
@@ -347,11 +412,7 @@ Namespace ConsoleGUI
     End Sub
 
     Friend Sub DrawVerticalLine(column As Integer, top As Integer, bottom As Integer, fg As ConsoleColor, bg As ConsoleColor)
-      If Me.Theme = ControlTheme.Basic Then
-        Me.DrawVerticalLine(column, top, bottom, "│"c, fg, bg)
-      Else
-        Me.DrawVerticalLine(column, top, bottom, "║"c, fg, bg)
-      End If
+      Me.DrawVerticalLine(column, top, bottom, "│"c, fg, bg)
     End Sub
 
     Friend Sub DrawBoxFill(left As Integer, top As Integer, right As Integer, bottom As Integer, fg As ConsoleColor, bg As ConsoleColor)
@@ -387,7 +448,7 @@ Namespace ConsoleGUI
       If bottom < top Then
         Dim temp As Integer = top
         top = bottom
-        bottom = top
+        bottom = temp
       End If
 
       If left < 0 OrElse right >= Me.Width OrElse top < 0 OrElse bottom >= Me.Height Then
@@ -422,35 +483,19 @@ Namespace ConsoleGUI
     End Sub
 
     Friend Sub DrawLeftArrow(column As Integer, row As Integer, fg As ConsoleColor, bg As ConsoleColor)
-      If Me.Theme = ControlTheme.Basic Then
-        Me._backbuffer.SetChar(column, row, "←"c, fg, bg)
-      Else
-        Me._backbuffer.SetChar(column, row, ChrW(&H11), fg, bg)
-      End If
+      Me._backbuffer.SetChar(column, row, "←"c, fg, bg)
     End Sub
 
     Friend Sub DrawRightArrow(column As Integer, row As Integer, fg As ConsoleColor, bg As ConsoleColor)
-      If Me.Theme = ControlTheme.Basic Then
-        Me._backbuffer.SetChar(column, row, "→"c, fg, bg)
-      Else
-        Me._backbuffer.SetChar(column, row, ChrW(&H10), fg, bg)
-      End If
+      Me._backbuffer.SetChar(column, row, "→"c, fg, bg)
     End Sub
 
     Friend Sub DrawUpArrow(column As Integer, row As Integer, fg As ConsoleColor, bg As ConsoleColor)
-      If Me.Theme = ControlTheme.Basic Then
-        Me._backbuffer.SetChar(column, row, "↑"c, fg, bg)
-      Else
-        Me._backbuffer.SetChar(column, row, ChrW(&H1E), fg, bg)
-      End If
+      Me._backbuffer.SetChar(column, row, "↑"c, fg, bg)
     End Sub
 
     Friend Sub DrawDownArrow(column As Integer, row As Integer, fg As ConsoleColor, bg As ConsoleColor)
-      If Me.Theme = ControlTheme.Basic Then
-        Me._backbuffer.SetChar(column, row, "↓"c, fg, bg)
-      Else
-        Me._backbuffer.SetChar(column, row, ChrW(&H1F), fg, bg)
-      End If
+      Me._backbuffer.SetChar(column, row, "↓"c, fg, bg)
     End Sub
 
     Friend Sub DrawLightShade(column As Integer, row As Integer, fg As ConsoleColor, bg As ConsoleColor)
@@ -461,41 +506,33 @@ Namespace ConsoleGUI
       Me._backbuffer.SetChar(column, row, "█"c, fg, bg)
     End Sub
 
-    Friend Sub DrawMiniBlock(column As Integer, row As Integer, fg As ConsoleColor, bg As ConsoleColor)
-      Me._backbuffer.SetChar(column, row, "■"c, fg, bg)
-    End Sub
-
     Friend Sub SetCursorPosition(x As Integer, y As Integer)
-      Console.SetCursorPosition(x, y)
+      Me._console.SetCursorPosition(x, y)
     End Sub
 
-    Friend Sub HideCursor()
+    Public Sub HideCursor()
 
       If Me._cursorHideCount = 0 Then
-        Console.CursorVisible = False
+        Me._console.SetCursorVisible(False)
       End If
 
       Me._cursorHideCount += 1
 
     End Sub
 
-    Friend Sub ShowCursor()
+    Public Sub ShowCursor()
 
       If Me._cursorHideCount > 0 Then
         Me._cursorHideCount -= 1
       End If
 
       If Me._cursorHideCount = 0 Then
-        Console.CursorVisible = True
+        Me._console.SetCursorVisible(True)
       End If
 
     End Sub
 
   End Class
 
-  Public Enum ControlTheme
-    Basic
-    CSharp
-  End Enum
 
 End Namespace
