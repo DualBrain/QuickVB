@@ -202,8 +202,9 @@ Public Class QuickVBWorkspace
     End Try
   End Sub
 
-  Public Function BuildProgram() As List(Of Diagnostic)
-    Return Me.CompileProgram(False)
+  ''' <summary>Builds the program. <paramref name="waitForKey"/> (running it from the editor, not making an EXE) makes a program that draws wait for a key when it ends.</summary>
+  Public Function BuildProgram(Optional waitForKey As Boolean = False) As List(Of Diagnostic)
+    Return Me.CompileProgram(False, Nothing, Nothing, waitForKey)
   End Function
 
   ''' <summary>Where programs are built: a folder of this running QuickVB's own (see <see cref="AppFolders"/>), so nothing is written to the install folder.</summary>
@@ -245,7 +246,7 @@ Public Class QuickVBWorkspace
   End Function
 
   ''' <param name="transform">Changes the compilation before it is built (the debugger adds its calls this way).</param>
-  Public Function CompileProgram(background As Boolean, Optional cancel As CancellationToken = Nothing, Optional transform As Func(Of Compilation, Compilation) = Nothing) As List(Of Diagnostic)
+  Public Function CompileProgram(background As Boolean, Optional cancel As CancellationToken = Nothing, Optional transform As Func(Of Compilation, Compilation) = Nothing, Optional waitForKey As Boolean = False) As List(Of Diagnostic)
 
     Dim diagnostics As New List(Of Diagnostic)
 
@@ -274,7 +275,7 @@ Public Class QuickVBWorkspace
       If Not background AndAlso transform Is Nothing AndAlso compilation.Options.OutputKind = OutputKind.ConsoleApplication AndAlso
          QBLibrary.LibrariesUsedBy(compilation).Contains(QBLibrary.Sdl) Then
         compilation = compilation.WithOptions(compilation.Options.WithOutputKind(OutputKind.WindowsApplication))
-        compilation = WaitForKeyAtEnd(compilation, cancel)
+        If waitForKey Then compilation = WaitForKeyAtEnd(compilation, cancel)
         Me._windowed = True
       End If
 
@@ -398,7 +399,7 @@ Public Class QuickVBWorkspace
 
     Dim path = Me.EnsureExtension(IO.Path.Combine(BinFolder, project.AssemblyName), ".dll")
 
-    Dim diagnostics = Me.BuildProgram()
+    Dim diagnostics = Me.BuildProgram(True)
 
     Dim errorDiagnostics = diagnostics.Where(Function(diagnostic) diagnostic.Severity = DiagnosticSeverity.Error)
 

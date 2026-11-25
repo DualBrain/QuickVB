@@ -169,6 +169,23 @@ Public Class QBLibraryTests
   End Sub
 
   <Fact>
+  Public Sub OnlyRunningAProgramMakesItWaitForAKey()
+    Dim built = Build("Imports QB.Graphics" & vbLf & "Module Demo" & vbLf & "  Sub Main()" & vbLf & "    SCREEN(9)" & vbLf & "  End Sub" & vbLf & "End Module")
+    Dim marker = System.Text.Encoding.ASCII.GetBytes("WaitForKeyAtExit")
+
+    ' built as for Make EXE File: the program just ends
+    Assert.False(Contains(File.ReadAllBytes(BinFile("Demo.dll")), marker))
+
+    ' built to run from the editor: it waits
+    built.Workspace.BuildProgram(True)
+    Assert.True(Contains(File.ReadAllBytes(BinFile("Demo.dll")), marker))
+  End Sub
+
+  Private Shared Function Contains(bytes As Byte(), part As Byte()) As Boolean
+    Return bytes.AsSpan().IndexOf(part.AsSpan()) >= 0
+  End Function
+
+  <Fact>
   Public Sub ABareStatementCountsToo()
     Dim built = Build("Module Demo" & vbLf & "  Sub Main()" & vbLf & "    CLS" & vbLf & "  End Sub" & vbLf & "End Module")
 
