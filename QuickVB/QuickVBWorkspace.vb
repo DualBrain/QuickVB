@@ -203,8 +203,8 @@ Public Class QuickVBWorkspace
   End Sub
 
   ''' <summary>Builds the program. <paramref name="waitForKey"/> (running it from the editor, not making an EXE) makes a program that draws wait for a key when it ends.</summary>
-  Public Function BuildProgram(Optional waitForKey As Boolean = False) As List(Of Diagnostic)
-    Return Me.CompileProgram(False, Nothing, Nothing, waitForKey)
+  Public Function BuildProgram(Optional waitForKey As Boolean = False, Optional windowTitle As String = Nothing) As List(Of Diagnostic)
+    Return Me.CompileProgram(False, Nothing, Nothing, waitForKey, windowTitle)
   End Function
 
   ''' <summary>Where programs are built: a folder of this running QuickVB's own (see <see cref="AppFolders"/>), so nothing is written to the install folder.</summary>
@@ -246,7 +246,7 @@ Public Class QuickVBWorkspace
   End Function
 
   ''' <param name="transform">Changes the compilation before it is built (the debugger adds its calls this way).</param>
-  Public Function CompileProgram(background As Boolean, Optional cancel As CancellationToken = Nothing, Optional transform As Func(Of Compilation, Compilation) = Nothing, Optional waitForKey As Boolean = False) As List(Of Diagnostic)
+  Public Function CompileProgram(background As Boolean, Optional cancel As CancellationToken = Nothing, Optional transform As Func(Of Compilation, Compilation) = Nothing, Optional waitForKey As Boolean = False, Optional windowTitle As String = Nothing) As List(Of Diagnostic)
 
     Dim diagnostics As New List(Of Diagnostic)
 
@@ -275,7 +275,7 @@ Public Class QuickVBWorkspace
       If Not background AndAlso transform Is Nothing AndAlso compilation.Options.OutputKind = OutputKind.ConsoleApplication AndAlso
          QBLibrary.LibrariesUsedBy(compilation).Contains(QBLibrary.Sdl) Then
         compilation = compilation.WithOptions(compilation.Options.WithOutputKind(OutputKind.WindowsApplication))
-        If waitForKey Then compilation = WaitForKeyAtEnd(compilation, cancel)
+        compilation = PrepareWindow(compilation, windowTitle, waitForKey, cancel)
         Me._windowed = True
       End If
 
@@ -313,16 +313,22 @@ Public Class QuickVBWorkspace
   End Function
 
   ''' <summary>
-  ''' Makes a program that draws leave its window up until a key is pressed when it ends ("Press any key to continue", as QBasic does), by
-  ''' setting <c>QB.Video.WaitForKeyAtExit</c> in front of the first statement of Main. The statement goes on that statement's own line,
-  ''' so the line numbers of the program stay what they are in the editor.
+  ''' Prepares a program that draws: its window is titled <paramref name="title"/> (when there is one) and, with <paramref name="waitForKey"/>,
+  ''' left up until a key is pressed when the program ends ("Press any key to continue", as QBasic does). Both are statements in front of the
+  ''' first statement of Main, on that statement's own line, so the line numbers of the program stay what they are in the editor.
   ''' </summary>
-  Friend Shared Function WaitForKeyAtEnd(compilation As Compilation, Optional cancel As CancellationToken = Nothing) As Compilation
+  Friend Shared Function PrepareWindow(compilation As Compilation, title As String, waitForKey As Boolean, Optional cancel As CancellationToken = Nothing) As Compilation
+
+    Dim prefix = ""
+    If Not String.IsNullOrEmpty(title) Then prefix &= "QB.Video.WindowTitle = """ & title.Replace("""", """""") & """ : "
+    If waitForKey Then prefix &= "QB.Video.WaitForKeyAtExit = True : "
+    If prefix.Length = 0 Then Return compilation
 
     Dim entry = compilation.GetEntryPoint(cancel)
     If entry Is Nothing OrElse entry.DeclaringSyntaxReferences.Length = 0 Then Return compilation
 
     Dim reference = entry.DeclaringSyntaxReferences(0)
+
     ' the reference is the Sub statement; the body belongs to the block around it
     Dim method = TryCast(reference.GetSyntax(cancel).Parent, MethodBlockSyntax)
     If method Is Nothing OrElse method.Statements.Count = 0 Then Return compilation
@@ -331,7 +337,7 @@ Public Class QuickVBWorkspace
     If TypeOf first Is LabelStatementSyntax Then Return compilation
 
     Dim tree = reference.SyntaxTree
-    Dim text = tree.GetText(cancel).WithChanges(New TextChange(New TextSpan(first.SpanStart, 0), "QB.Video.WaitForKeyAtExit = True : "))
+    Dim text = tree.GetText(cancel).WithChanges(New TextChange(New TextSpan(first.SpanStart, 0), prefix))
     Dim changed = tree.WithChangedText(text)
 
     Return compilation.ReplaceSyntaxTree(tree, changed)
@@ -399,7 +405,8 @@ Public Class QuickVBWorkspace
 
     Dim path = Me.EnsureExtension(IO.Path.Combine(BinFolder, project.AssemblyName), ".dll")
 
-    Dim diagnostics = Me.BuildProgram(True)
+    ' the window is titled with the program's name (the assembly of a program that is not a file yet is just "Untitled.exe")
+    Dim diagnostics = Me.BuildProgram(True, project.Name)
 
     Dim errorDiagnostics = diagnostics.Where(Function(diagnostic) diagnostic.Severity = DiagnosticSeverity.Error)
 
@@ -627,11 +634,13 @@ Public Class QuickVBWorkspace
   ''' </summary>
   Public Function MakeExecutable(destination As String, includeDebugSymbols As Boolean) As List(Of Diagnostic)
 
-    Dim diagnostics = Me.BuildProgram()
+    Dim baseName = IO.Path.GetFileNameWithoutExtension(destination)
+
+    ' a program that draws is titled with the name of the file it is made as
+    Dim diagnostics = Me.BuildProgram(False, baseName)
     If diagnostics.Any(Function(d) d.Severity = DiagnosticSeverity.Error) Then Return diagnostics
 
     Dim project = (From p In Me.CurrentSolution.Projects Where p.CompilationOptions.OutputKind <> OutputKind.DynamicallyLinkedLibrary).Single()
-    Dim baseName = IO.Path.GetFileNameWithoutExtension(destination)
     Dim folder = IO.Path.GetDirectoryName(IO.Path.GetFullPath(destination))
     Dim built = IO.Path.Combine(BinFolder, project.AssemblyName)
 

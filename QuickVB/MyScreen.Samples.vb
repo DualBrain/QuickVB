@@ -49,8 +49,9 @@ Partial Public Class MyScreen
   Private Sub LoadSample(sample As Sample)
 
     ' the sample is a program without a file yet: Save asks where to keep it
-    App.NewUntitledWorkspace()
-    Me.ViewDocument("Untitled", "Untitled.vb", sample.Text(), title:=sample.Name)
+    ' (the program is named after the sample: that is what its window and the status line say)
+    App.OpenWorkspace(sample.Name, {"Untitled.vb"})
+    Me.ViewDocument(sample.Name, "Untitled.vb", sample.Text(), title:=sample.Name)
     If Me.RoslynEnabled Then Me.OnLineCommit(Me.DocumentBuffer)
     Me._savedText = Me.DocumentBuffer.Text
     Me._diagnostics = Nothing

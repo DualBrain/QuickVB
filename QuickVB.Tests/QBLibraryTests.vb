@@ -160,11 +160,25 @@ Public Class QBLibraryTests
     Dim built = Build("Imports QB.Graphics" & vbLf & "Module Demo" & vbLf & "  Sub Main()" & vbLf & "    SCREEN(9)" & vbLf & "    PRINT(""hi"")" & vbLf & "  End Sub" & vbLf & "End Module")
     Dim compilation = built.Workspace.CurrentSolution.Projects.First().GetCompilationAsync().Result
 
-    Dim changed = QuickVBWorkspace.WaitForKeyAtEnd(compilation)
+    Dim changed = QuickVBWorkspace.PrepareWindow(compilation, Nothing, True)
 
     Dim lines = changed.SyntaxTrees.Single().GetText().Lines
     Assert.Equal(compilation.SyntaxTrees.Single().GetText().Lines.Count, lines.Count)   ' no line moved
     Assert.Equal("    QB.Video.WaitForKeyAtExit = True : SCREEN(9)", lines(3).ToString())
+    Assert.DoesNotContain(changed.GetDiagnostics(), Function(d) d.Severity = Microsoft.CodeAnalysis.DiagnosticSeverity.Error)
+  End Sub
+
+  <Fact>
+  Public Sub AProgramThatDrawsIsTitledWithItsName()
+    Dim built = Build("Imports QB.Graphics" & vbLf & "Module Demo" & vbLf & "  Sub Main()" & vbLf & "    SCREEN(9)" & vbLf & "  End Sub" & vbLf & "End Module")
+    Dim compilation = built.Workspace.CurrentSolution.Projects.First().GetCompilationAsync().Result
+
+    Dim changed = QuickVBWorkspace.PrepareWindow(compilation, "Say ""hi""", True)
+
+    Dim lines = changed.SyntaxTrees.Single().GetText().Lines
+    Assert.Equal(compilation.SyntaxTrees.Single().GetText().Lines.Count, lines.Count)
+    Dim q = ControlChars.Quote
+    Assert.Equal("    QB.Video.WindowTitle = " & q & "Say " & q & q & "hi" & q & q & q & " : QB.Video.WaitForKeyAtExit = True : SCREEN(9)", lines(3).ToString())
     Assert.DoesNotContain(changed.GetDiagnostics(), Function(d) d.Severity = Microsoft.CodeAnalysis.DiagnosticSeverity.Error)
   End Sub
 
@@ -179,6 +193,12 @@ Public Class QBLibraryTests
     ' built to run from the editor: it waits
     built.Workspace.BuildProgram(True)
     Assert.True(Contains(File.ReadAllBytes(BinFile("Demo.dll")), marker))
+
+    ' and a title only when it is given one
+    Dim title = System.Text.Encoding.ASCII.GetBytes("WindowTitle")
+    Assert.False(Contains(File.ReadAllBytes(BinFile("Demo.dll")), title))
+    built.Workspace.BuildProgram(False, "Demo")
+    Assert.True(Contains(File.ReadAllBytes(BinFile("Demo.dll")), title))
   End Sub
 
   Private Shared Function Contains(bytes As Byte(), part As Byte()) As Boolean

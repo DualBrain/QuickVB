@@ -913,6 +913,7 @@ Public Class DialogFlowTests
     Assert.True(s.Ui.Editor.Text.ToUpperInvariant().Contains("GORILLA"), s.Screen_())
     Assert.Contains("Imports QB", s.Ui.Editor.Text)
     Assert.Contains("Gorilla", s.Console.RowText(1))
+    Assert.Equal("Gorilla", App.TheWorkspace.CurrentSolution.Projects.First().Name)   ' the program is named after the sample
   End Sub
 
   <Fact>
