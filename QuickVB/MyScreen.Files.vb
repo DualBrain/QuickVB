@@ -641,7 +641,7 @@ Partial Public Class MyScreen
 
     Me._lastOpenDirectory = root
 
-    App.OpenWorkspace(IO.Path.GetFileNameWithoutExtension(projectPath), {relativeName(first)})
+    App.OpenWorkspace(IO.Path.GetFileNameWithoutExtension(projectPath), {relativeName(first)}, ProjectFiles.OptionsOf(projectPath))
     Me.ResetFiles()
     Dim firstFile = New ProgramFile With {.Name = relativeName(first), .Path = first}
     Me._files.Add(firstFile)

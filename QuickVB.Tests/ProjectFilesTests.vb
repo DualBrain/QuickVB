@@ -85,4 +85,48 @@ Public Class ProjectFilesTests
     Assert.Contains("Module Main", ui.Editor.Text)
   End Sub
 
+  <Fact>
+  Public Sub ProgramsWithoutAProjectAreCompiledWithTheStrictDefaults()
+    Dim options As New ProgramOptions()
+    Assert.True(options.OptionExplicit)
+    Assert.True(options.OptionStrict)
+    Assert.True(options.OptionInfer)
+    Assert.False(options.CompareText)
+
+    Dim workspace As New QuickVBWorkspace()
+    Dim projectId = workspace.CreateProject("Demo", "Demo")
+    Dim compilationOptions = DirectCast(workspace.CurrentSolution.GetProject(projectId).CompilationOptions, Microsoft.CodeAnalysis.VisualBasic.VisualBasicCompilationOptions)
+
+    Assert.True(compilationOptions.OptionExplicit)
+    Assert.Equal(Microsoft.CodeAnalysis.VisualBasic.OptionStrict.On, compilationOptions.OptionStrict)
+    Assert.True(compilationOptions.OptionInfer)
+    Assert.False(compilationOptions.OptionCompareText)
+  End Sub
+
+  <Fact>
+  Public Sub AProjectsOwnOptionSettingsAreUsed()
+    Dim folder = IO.Path.Combine(IO.Path.GetTempPath(), "QuickVB.Options." & Guid.NewGuid().ToString("N"))
+    IO.Directory.CreateDirectory(folder)
+    Try
+      Dim lenient = IO.Path.Combine(folder, "Lenient.vbproj")
+      IO.File.WriteAllText(lenient, "<Project Sdk=""Microsoft.NET.Sdk""><PropertyGroup><OptionExplicit>Off</OptionExplicit><OptionStrict>Off</OptionStrict><OptionInfer>Off</OptionInfer><OptionCompare>Text</OptionCompare></PropertyGroup></Project>")
+      Dim plain = IO.Path.Combine(folder, "Plain.vbproj")
+      IO.File.WriteAllText(plain, "<Project Sdk=""Microsoft.NET.Sdk""><PropertyGroup><OutputType>Exe</OutputType></PropertyGroup></Project>")
+
+      Dim options = ProjectFiles.OptionsOf(lenient)
+      Assert.False(options.OptionExplicit)
+      Assert.False(options.OptionStrict)
+      Assert.False(options.OptionInfer)
+      Assert.True(options.CompareText)
+
+      Dim defaults = ProjectFiles.OptionsOf(plain)   ' says nothing about them
+      Assert.True(defaults.OptionExplicit)
+      Assert.True(defaults.OptionStrict)
+      Assert.True(defaults.OptionInfer)
+      Assert.False(defaults.CompareText)
+    Finally
+      IO.Directory.Delete(folder, True)
+    End Try
+  End Sub
+
 End Class

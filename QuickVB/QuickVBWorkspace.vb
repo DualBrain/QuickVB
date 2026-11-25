@@ -66,15 +66,17 @@ Public Class QuickVBWorkspace
 
   End Function
 
-  Function CreateProject(name As String, assemblyName As String) As ProjectId
+  Function CreateProject(name As String, assemblyName As String, Optional programOptions As ProgramOptions = Nothing) As ProjectId
+    If programOptions Is Nothing Then programOptions = New ProgramOptions()
     Dim projId = ProjectId.CreateNewId(name)
     Dim metadataReferences = GetMetadataReferences()
     Dim opts As New VisualBasic.VisualBasicCompilationOptions(OutputKind.ConsoleApplication,
                                                               globalImports:=VisualBasic.GlobalImport.Parse({"System",
                                                                                                              "Microsoft.VisualBasic"}),
-                                                              optionExplicit:=False,
-                                                              optionStrict:=VisualBasic.OptionStrict.Off,
-                                                              optionInfer:=False,
+                                                              optionExplicit:=programOptions.OptionExplicit,
+                                                              optionCompareText:=programOptions.CompareText,
+                                                              optionStrict:=If(programOptions.OptionStrict, VisualBasic.OptionStrict.On, VisualBasic.OptionStrict.Off),
+                                                              optionInfer:=programOptions.OptionInfer,
                                                               platform:=Platform.AnyCpu)
     Dim projInfo = ProjectInfo.Create(projId,
                                       VersionStamp.Default,

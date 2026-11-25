@@ -41,11 +41,11 @@ Module App
   End Sub
 
   ''' <summary>Starts a fresh workspace for a program named <paramref name="programName"/> made of the files <paramref name="documentNames"/>.</summary>
-  Public Sub OpenWorkspace(programName As String, documentNames As IEnumerable(Of String))
+  Public Sub OpenWorkspace(programName As String, documentNames As IEnumerable(Of String), Optional programOptions As ProgramOptions = Nothing)
 
     TheWorkspace = New QuickVBWorkspace()
 
-    Dim projectId = TheWorkspace.CreateProject(programName, programName & ".exe")
+    Dim projectId = TheWorkspace.CreateProject(programName, programName & ".exe", programOptions)
 
     For Each name In documentNames
       TheWorkspace.CreateDocument(projectId, name)

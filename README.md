@@ -150,7 +150,7 @@ Click the menu bar and the menus, dialog buttons, check boxes, lists and the Hel
 
 ## Projects and settings
 
-File > Open Program also accepts a `.vbproj`, `.sln` or `.slnx`: QuickVB collects the Visual Basic files the project(s) compile (bin and obj are skipped) and opens the only one, or asks which to edit. Options > Display choices (colours, scroll bars, tab stops) are kept in `settings.ini` in a `QuickVB` folder under your application-data folder. Commands that have no implementation yet are greyed out and say "Not implemented." when chosen.
+File > Open Program also accepts a `.vbproj`, `.sln` or `.slnx`: QuickVB collects the Visual Basic files the project(s) compile (bin and obj are skipped) and opens the only one, or asks which to edit. A program with no project is compiled with Option Explicit On, Option Strict On, Option Infer On and Option Compare Binary; a `.vbproj` that sets `OptionExplicit`, `OptionStrict`, `OptionInfer` or `OptionCompare` is compiled the way it says, and an Option statement in a file always wins. Options > Display choices (colours, scroll bars, tab stops) are kept in `settings.ini` in a `QuickVB` folder under your application-data folder. Commands that have no implementation yet are greyed out and say "Not implemented." when chosen.
 
 ## Programs of several files
 

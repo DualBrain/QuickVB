@@ -33,6 +33,44 @@ Public Module ProjectFiles
 
   End Function
 
+  ''' <summary>
+  ''' The Option settings of the first project of a .vbproj, .sln or .slnx (<c>OptionExplicit</c>, <c>OptionStrict</c>, <c>OptionInfer</c> and
+  ''' <c>OptionCompare</c> properties); what a project doesn't say is left at the defaults: Explicit On, Strict On, Infer On, Compare Binary.
+  ''' </summary>
+  Public Function OptionsOf(path As String) As ProgramOptions
+
+    Dim options As New ProgramOptions()
+
+    Try
+      Dim project = ProjectsOf(path).FirstOrDefault()
+      If project Is Nothing Then Return options
+
+      Dim text = File.ReadAllText(project)
+      Dim value = PropertyOf(text, "OptionExplicit")
+      If value IsNot Nothing Then options.OptionExplicit = IsOn(value)
+      value = PropertyOf(text, "OptionStrict")
+      If value IsNot Nothing Then options.OptionStrict = IsOn(value)
+      value = PropertyOf(text, "OptionInfer")
+      If value IsNot Nothing Then options.OptionInfer = IsOn(value)
+      value = PropertyOf(text, "OptionCompare")
+      If value IsNot Nothing Then options.CompareText = String.Equals(value, "Text", StringComparison.OrdinalIgnoreCase)
+    Catch ex As Exception When TypeOf ex Is IOException OrElse TypeOf ex Is UnauthorizedAccessException
+      ' a project that can't be read: the defaults
+    End Try
+
+    Return options
+
+  End Function
+
+  Private Function PropertyOf(text As String, name As String) As String
+    Dim match = Regex.Match(text, "<" & name & ">\s*([^<\s]+)\s*</" & name & ">", RegexOptions.IgnoreCase)
+    Return If(match.Success, match.Groups(1).Value, Nothing)
+  End Function
+
+  Private Function IsOn(value As String) As Boolean
+    Return Not (String.Equals(value, "Off", StringComparison.OrdinalIgnoreCase) OrElse String.Equals(value, "False", StringComparison.OrdinalIgnoreCase))
+  End Function
+
   Private Function ProjectsOf(path As String) As List(Of String)
 
     Dim extension = IO.Path.GetExtension(path).ToLowerInvariant()
@@ -87,3 +125,16 @@ Public Module ProjectFiles
   End Function
 
 End Module
+
+''' <summary>
+''' The Option settings a program is compiled with: what its project says, or QuickVB's defaults when there is no project
+''' (Option Explicit On, Option Strict On, Option Infer On, Option Compare Binary).
+''' </summary>
+Public NotInheritable Class ProgramOptions
+  Public Property OptionExplicit As Boolean = True
+  Public Property OptionStrict As Boolean = True
+  Public Property OptionInfer As Boolean = True
+
+  ''' <summary>True for Option Compare Text; False (the default) is Option Compare Binary.</summary>
+  Public Property CompareText As Boolean = False
+End Class

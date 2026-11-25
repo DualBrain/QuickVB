@@ -67,7 +67,7 @@ Public Class MultiFileTests
     Me._mainPath = Path.Combine(Me._root, "Main.vb")
     Me._helperPath = Path.Combine(Me._root, "Helper.vb")
     File.WriteAllText(Me._mainPath, "Module MainModule" & vbCrLf & "  Sub Main()" & vbCrLf & "    Greeter.Hello()" & vbCrLf & "  End Sub" & vbCrLf & "End Module")
-    File.WriteAllText(Me._helperPath, "Module Greeter" & vbCrLf & "  Sub Hello()" & vbCrLf & "    PRINT(""hi"")" & vbCrLf & "  End Sub" & vbCrLf & "End Module")
+    File.WriteAllText(Me._helperPath, "Imports QB.Video" & vbCrLf & "Module Greeter" & vbCrLf & "  Sub Hello()" & vbCrLf & "    PRINT(""hi"")" & vbCrLf & "  End Sub" & vbCrLf & "End Module")
   End Sub
 
   Public Sub Dispose() Implements IDisposable.Dispose
@@ -183,7 +183,7 @@ Public Class MultiFileTests
 
     s.Type("n")
     Assert.Equal({"Main.vb"}, s.Ui.FileNames.ToArray())
-    Assert.StartsWith("Module Greeter", File.ReadAllText(Me._helperPath))
+    Assert.StartsWith("Imports QB.Video", File.ReadAllText(Me._helperPath))   ' the unsaved "x" was not written
   End Sub
 
   <Fact>
