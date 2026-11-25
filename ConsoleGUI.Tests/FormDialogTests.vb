@@ -212,7 +212,7 @@ Public Class FormDialogTests
 
     Assert.False(leaked)
     Assert.True(screen.Dialog.IsOpen)
-    Assert.Equal(Screen.DialogStatusHint, screen.Dialog.StatusHint)
+    Assert.Equal(ConsoleGUI.Screen.DialogStatusHint, screen.Dialog.StatusHint)
   End Sub
 
   ' ---- an input box (New SUB, Help Path)

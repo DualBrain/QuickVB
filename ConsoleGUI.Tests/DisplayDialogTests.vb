@@ -78,7 +78,7 @@ Public Class DisplayDialogTests
     For Each name In {"Black", "Blue", "Green", "Cyan", "Red", "Magenta", "Brown", "White"}
       Assert.Contains(name, text)
     Next
-    Assert.Equal(Screen.DialogStatusHint, d.StatusHint)
+    Assert.Equal(ConsoleGUI.Screen.DialogStatusHint, d.StatusHint)
   End Sub
 
   <Fact>
