@@ -13,8 +13,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="QB.Compatibility" Version="0.1.0-preview.1" />
-    <PackageReference Include="QB.Compatibility.Sdl" Version="0.1.0-preview.1" />
+    <PackageReference Include="QB.Compatibility" Version="0.1.1" />
+    <PackageReference Include="QB.Compatibility.Sdl" Version="0.1.1" />
   </ItemGroup>
 
 </Project>

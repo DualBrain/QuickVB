@@ -37,7 +37,7 @@
     SDL2's native library is embedded for the platform being built for (publish with -r <rid>; otherwise this machine's).
   -->
   <PropertyGroup>
-    <QbVersion>0.1.0-preview.1</QbVersion>
+    <QbVersion>0.1.1</QbVersion>
     <SdlCsVersion>1.0.82</SdlCsVersion>
     <_SdlRid Condition="'$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</_SdlRid>
     <_SdlRid Condition="'$(_SdlRid)' == '' and $([MSBuild]::IsOSPlatform('Windows'))">win-x64</_SdlRid>
