@@ -78,7 +78,7 @@ And this GitHub project's own list:
 * ~~Remove "self-editing".~~ (done)
 * Debug > Trace On, History On (Shift+F8 / Shift+F10) and Set Next Statement
 * ~~Replace the QuickBasic library included here with the QB.Compatibility NuGet package~~ (done; see *QuickBASIC statements*)
-* Actually port GORILLA.BAS as an included sample (it was written for the old library and is out of the solution until ported)
+* ~~Actually port GORILLA.BAS as an included sample~~ (done; see *The GORILLA sample*)
 * Install as a dotnet tool (follows the library change above)
 
 ## What QuickVB does today
@@ -109,6 +109,10 @@ The QuickBASIC and QBasic statements and functions (`PRINT`, `LOCATE`, `CLS`, `O
 * A program that imports `QB.Video` (and the other text namespaces) gets `QB.Compatibility.dll` next to it when it is run or made into an EXE.
 * A program that imports `QB.Graphics` also gets `QB.Compatibility.Sdl.dll`, SDL2-CS and the native SDL2 library for the platform QuickVB was built for, and draws in an SDL2 window.
 * Under the debugger a small `QuickVB.Runtime.dll` is added to the program as well.
+
+## The GORILLA sample
+
+`Gorilla/GORILLA.BAS` is the original QBasic program and `Gorilla/GORILLA.vb` is the same program converted to Visual Basic for QB.Compatibility (with the `qb2vb` converter from that project). It draws, so it needs a window: open it in QuickVB with `quickvb Gorilla/GORILLA.vb` and press F5, or run it as a project with `dotnet run --project Gorilla`. The QuickVB tests compile the converted file as it is, to be sure it stays working.
 
 ## A single file to copy (xcopy deployment)
 
