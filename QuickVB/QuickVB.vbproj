@@ -108,8 +108,4 @@
     <ProjectReference Include="..\QuickVB.Runtime\QuickVB.Runtime.vbproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Remove="TestProject\**" />
-  </ItemGroup>
-
 </Project>

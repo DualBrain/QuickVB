@@ -1,37 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- GORILLA.BAS (the original, beside this file) converted to Visual Basic for QB.Compatibility; it draws, so it needs the Sdl package. -->
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <OutputType>Exe</OutputType>
-    <StartupObject>Main</StartupObject>
+    <StartupObject>Program</StartupObject>
     <RootNamespace></RootNamespace>
     <AssemblyName>Gorilla</AssemblyName>
-    <MyType>Empty</MyType>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <OptionExplicit>Off</OptionExplicit>
-    <OptionCompare>Binary</OptionCompare>
-    <OptionStrict>Off</OptionStrict>
-    <OptionInfer>Off</OptionInfer>
-    <DocumentationFile>Gorilla.xml</DocumentationFile>
-    <NoWarn>$(NoWarn);CA1416;42016;41999;42017;42018;42019;42032;42036;42020;42021;42022</NoWarn>
+    <OptionExplicit>On</OptionExplicit>
+    <OptionInfer>On</OptionInfer>
+    <OptionStrict>On</OptionStrict>
   </PropertyGroup>
 
-  <!-- no "My" application model: it needs Windows Forms packages, and the program does not use it -->
   <ItemGroup>
-    <Compile Remove="My Project\Application.Designer.vb" />
-    <Compile Remove="My Project\Settings.Designer.vb" />
-    <None Remove="My Project\Settings.settings" />
-    <None Remove="My Project\Application.myapp" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Import Include="QuickBasic" />
-    <Import Include="QuickBasic.Compatibility" />
-    <Import Include="QuickBasic.Constants" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\QuickBasic\QuickBasic.vbproj" />
+    <PackageReference Include="QB.Compatibility" Version="0.1.0-preview.1" />
+    <PackageReference Include="QB.Compatibility.Sdl" Version="0.1.0-preview.1" />
   </ItemGroup>
 
 </Project>
