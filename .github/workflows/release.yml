@@ -1,6 +1,6 @@
 name: Release
 
-# Pushing a tag such as v0.1.0 packs the quickvb tool and publishes it to nuget.org.
+# Pushing a tag such as v0.1.1 packs the quickvb tool and publishes it to nuget.org.
 # It signs in with nuget.org Trusted Publishing (no API key is stored): the nuget.org account needs a policy
 # for this repository and workflow file (release.yml), and the repository needs a variable named NUGET_USER
 # holding the nuget.org profile name (not the email address).
