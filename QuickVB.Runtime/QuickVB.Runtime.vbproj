@@ -1,26 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- The part of the debugger that runs inside the program being debugged (see DebugHost). Only debug runs reference it. -->
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <OutputType>Library</OutputType>
-    <RootNamespace>QuickBasic</RootNamespace>
-    <AssemblyName>QuickBasic</AssemblyName>
+    <RootNamespace>QuickVB.Runtime</RootNamespace>
+    <AssemblyName>QuickVB.Runtime</AssemblyName>
     <MyType>Empty</MyType>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OptionExplicit>On</OptionExplicit>
     <OptionCompare>Binary</OptionCompare>
     <OptionStrict>Off</OptionStrict>
     <OptionInfer>On</OptionInfer>
-    <DocumentationFile>QuickBasic.xml</DocumentationFile>
+    <DocumentationFile>QuickVB.Runtime.xml</DocumentationFile>
     <NoWarn>$(NoWarn);CA1416;42016;41999;42017;42018;42019;42032;42036;42020;42021;42022</NoWarn>
   </PropertyGroup>
-
-  <!-- the library is OS neutral: no Windows Forms application model or generated settings -->
-  <ItemGroup>
-    <Compile Remove="My Project\Application.Designer.vb" />
-    <Compile Remove="My Project\Settings.Designer.vb" />
-    <None Remove="My Project\Settings.settings" />
-    <None Remove="My Project\Application.myapp" />
-  </ItemGroup>
 
 </Project>

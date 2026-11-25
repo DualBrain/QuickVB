@@ -72,7 +72,7 @@ End Class
 
 ''' <summary>
 ''' Runs a program that was compiled for debugging (see <see cref="Instrumenter"/>) in a process of its own and talks to the
-''' <c>QuickBasic.DebugHost</c> inside it. The program owns the terminal; QuickVB hears from it when it stops.
+''' <c>QuickVB.Runtime.DebugHost</c> inside it. The program owns the terminal; QuickVB hears from it when it stops.
 ''' The events are raised on a background thread.
 ''' </summary>
 Public NotInheritable Class DebugSession
@@ -108,7 +108,7 @@ Public NotInheritable Class DebugSession
 
     Dim arguments = """" & Me._dllPath & """" & If(String.IsNullOrEmpty(Me._commandLine), "", " " & Me._commandLine)
     Dim info As New ProcessStartInfo(QuickVBWorkspace.DotnetHost(), arguments) With {.UseShellExecute = False, .WorkingDirectory = Me._workingDirectory}
-    info.Environment(QuickBasic.DebugHost.PipeVariable) = Me._pipeName
+    info.Environment(QuickVB.Runtime.DebugHost.PipeVariable) = Me._pipeName
 
     Try
       Me._process = Process.Start(info)

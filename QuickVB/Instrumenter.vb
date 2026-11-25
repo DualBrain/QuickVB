@@ -143,7 +143,7 @@ Public NotInheritable Class Instrumenter
       arguments = "New String() {" & String.Join(", ", names.Select(Function(n) """" & n & """")) & "}, New Object() {" & String.Join(", ", values) & "}"
     End If
 
-    Dim text = "If QuickBasic.DebugHost.Check(" & Me._file & ", " & line & ") Then QuickBasic.DebugHost.Pause(" & Me._file & ", " & line & ", " & arguments & ")"
+    Dim text = "If QuickVB.Runtime.DebugHost.Check(" & Me._file & ", " & line & ") Then QuickVB.Runtime.DebugHost.Pause(" & Me._file & ", " & line & ", " & arguments & ")"
 
     Return ParseStatement(text)
 
@@ -232,7 +232,7 @@ Public NotInheritable Class Instrumenter
     If IsInsideLambda(node) Then Return visited
 
     Dim procedureName = visited.SubOrFunctionStatement.Identifier.ValueText
-    Dim wrapper = DirectCast(ParseStatement("Try" & vbCrLf & "QuickBasic.DebugHost.Enter(""" & procedureName & """)" & vbCrLf & "Finally" & vbCrLf & "QuickBasic.DebugHost.Leave()" & vbCrLf & "End Try"), TryBlockSyntax)
+    Dim wrapper = DirectCast(ParseStatement("Try" & vbCrLf & "QuickVB.Runtime.DebugHost.Enter(""" & procedureName & """)" & vbCrLf & "Finally" & vbCrLf & "QuickVB.Runtime.DebugHost.Leave()" & vbCrLf & "End Try"), TryBlockSyntax)
 
     ' Enter goes first, then the body (with its calls), all inside the Try
     Dim enter = wrapper.Statements(0)
