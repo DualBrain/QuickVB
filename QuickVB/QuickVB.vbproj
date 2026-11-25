@@ -74,13 +74,14 @@
   </PropertyGroup>
 
   <!--
-    dotnet pack: "dotnet tool install -g QuickVB" gives a "quickvb" command. The names below are working defaults, not decisions.
-    No licence is declared yet (PackageLicenseExpression) until that is settled.
+    dotnet pack: "dotnet tool install -g quickvb" gives a "quickvb" command.
+    The licence is the LICENSE file: MIT, with the Apache License 2.0 notice of the original Microsoft sample (a file, since one SPDX expression can't say both).
   -->
   <PropertyGroup>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>quickvb</ToolCommandName>
-    <PackageId>QuickVB</PackageId>
+    <PackageId>quickvb</PackageId>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>basic;visualbasic;quickbasic;qbasic;terminal;tui;editor;roslyn</PackageTags>
     <RollForward>Major</RollForward>
@@ -88,6 +89,7 @@
 
   <ItemGroup>
     <None Include="..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\LICENSE" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>

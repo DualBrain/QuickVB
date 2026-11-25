@@ -54,7 +54,7 @@ Have fun!
 
 Since the original post, the team had enough feedback that they released QuickVB as an open-source project! (This was done using CodePlex - which has since been "shutdown".) There was a lot of work left to be done to turn the sample into an environment (IDE) where you can really spend some quality time, and this GitHub project serves to re-ignite and continue that effort.
 
-## Well, that was 2014... today we can
+## Well, that was 2014... what about today?
 
 The sample above was a snapshot: a fun demo that lived and died inside Visual Studio 2013. This project picks it up and keeps going. QuickVB now runs on .NET 10 and Roslyn 5, on Windows and Linux (macOS is untested), in a real terminal, and it has grown from a demo into an editor and debugger you can write and run programs in.
 
