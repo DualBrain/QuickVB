@@ -1760,6 +1760,9 @@ Partial Public Class MyScreen
     If Me._lineDirty Then
       Me._lineDirty = False
 
+      bufferView.AddMissingParentheses(e.OldRow)
+      Me._lineDirty = False
+
       Me.OnLineCommit(bufferView.Buffer)
     End If
   End Sub

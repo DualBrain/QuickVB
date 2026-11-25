@@ -52,6 +52,18 @@ Public Class DocumentTextBufferView
 
   End Sub
 
+  ''' <summary>Puts the arguments of a QuickBASIC style call (<c>PRINT "hi"</c>) of a line that has just been left in parentheses.</summary>
+  Public Sub AddMissingParentheses(row As Integer)
+
+    If Not Me.HasDocument OrElse Me.IsReadOnly Then Return
+    If row < 0 OrElse row >= Me.Buffer.Lines.Count Then Return
+
+    For Each change In Parentheses.Edits(Me.Buffer.Text, row)
+      Me.Buffer.InsertText(row, change.Item1, change.Item2)
+    Next
+
+  End Sub
+
   ' Enter after the first line of a block that has no end yet: the end is written (the cursor goes between the two lines)
   Protected Overrides Sub OnLineEntered(row As Integer)
 

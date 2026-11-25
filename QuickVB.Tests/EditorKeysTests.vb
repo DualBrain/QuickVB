@@ -408,6 +408,18 @@ Public Class EditorKeysTests
   End Sub
 
   <Fact>
+  Public Sub LeavingAQuickBasicLineWritesItsParentheses()
+    Dim s As New Session("Imports QB.Video" & vbLf & "Module M" & vbLf & "  Sub S()" & vbLf & "    PRINT ""hi""" & vbLf & "  End Sub" & vbLf & "End Module")
+
+    s.Do_(Sub() s.Ui.EditorView.MoveCursor(3, s.Ui.EditorView.Buffer.Lines(3).Text.Length))
+    s.Console.QueueText(" ")                           ' an edit makes the line one to commit when it is left
+    s.Run()
+    s.Press(VirtualKey.VK_DOWN)                        ' leave the line
+
+    WaitFor(s, Function() s.Ui.EditorView.Buffer.Lines(3).Text.Contains("PRINT(""hi"")"))
+  End Sub
+
+  <Fact>
   Public Sub TheImportGoesBelowTheOptionAndImportsLinesThereAlready()
     Dim s As New Session("Option Explicit On" & vbLf & "Imports System" & vbLf & vbLf & "Module M" & vbLf & "  Sub Main()" & vbLf & "    LOCATE(1, 1)" & vbLf & "  End Sub" & vbLf & "End Module")
 
