@@ -1,0 +1,39 @@
+name: Release
+
+# Pushing a tag such as v0.1.0 packs the quickvb tool and publishes it to nuget.org.
+# It signs in with nuget.org Trusted Publishing (no API key is stored): the nuget.org account needs a policy
+# for this repository and workflow file (release.yml), and the repository needs a variable named NUGET_USER
+# holding the nuget.org profile name (not the email address).
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Test
+        run: dotnet test -c Release
+      - name: Pack
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          dotnet pack QuickVB -c Release -p:Version="$version" -o artifacts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: packages
+          path: artifacts/*.nupkg
+      - name: Sign in to nuget.org
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ vars.NUGET_USER }}
+      - name: Publish
+        run: dotnet nuget push "artifacts/*.nupkg" --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
