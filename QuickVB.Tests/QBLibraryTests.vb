@@ -131,23 +131,26 @@ Public Class QBLibraryTests
     Assert.True(File.Exists(BinFile(native)))
   End Sub
 
-  ' GORILLA.BAS, ported to QB.Compatibility, is the sample that shows the whole thing working: it must compile in QuickVB as it is
-  <Fact>
-  Public Sub TheGorillaSampleCompilesInQuickVBAndCarriesTheWindowLibraries()
+  ' the sample games, ported to QB.Compatibility, show the whole thing working: they must compile in QuickVB as they are
+  <Theory>
+  <InlineData("Gorilla", "GORILLA.vb", True)>
+  <InlineData("Nibbles", "NIBBLES.vb", False)>
+  Public Sub TheSampleGamesCompileInQuickVB(folderName As String, fileName As String, draws As Boolean)
     Dim folder = AppContext.BaseDirectory
     Dim source As String = Nothing
     Do While folder IsNot Nothing
-      Dim candidate = Path.Combine(folder, "Gorilla", "GORILLA.vb")
+      Dim candidate = Path.Combine(folder, folderName, fileName)
       If File.Exists(candidate) Then source = candidate : Exit Do
       folder = Path.GetDirectoryName(folder)
     Loop
     If source Is Nothing Then Return   ' running without the source tree
 
-    Dim built = Build(File.ReadAllText(source), "Gorilla")
+    Dim built = Build(File.ReadAllText(source), folderName)
 
     Assert.Empty(built.Diagnostics.Where(Function(d) d.Severity = DiagnosticSeverity.Error))
     Assert.Empty(QBLibrary.MissingImports(built.Workspace.CurrentSolution.Projects.First().GetCompilationAsync().Result))
-    Assert.True(File.Exists(BinFile("QB.Compatibility.Sdl.dll")))
+    Assert.True(File.Exists(BinFile("QB.Compatibility.dll")))
+    Assert.Equal(draws, File.Exists(BinFile("QB.Compatibility.Sdl.dll")))
   End Sub
 
 End Class
