@@ -2,7 +2,6 @@
 
   ' Used in Screen(), ...
   Private Shared m_screenMode As Integer = 0
-  Private Shared m_window As System.Windows.Forms.Form
 
   ' Used in Data(), Read(), Restore()
   Private Shared m_data As New List(Of Object)
@@ -1507,21 +1506,9 @@
         ' do nothing...
       Case 0
         ' text mode...
-        If m_window IsNot Nothing Then
-          m_window.Hide()
-          m_window.Dispose()
-          m_window = Nothing
-        End If
         Console.CursorVisible = False
       Case 1 ' 320x200 (25 rows, 40 columns)
-        If m_window Is Nothing Then
-          m_window = New System.Windows.Forms.Form With {.Text = Nothing,
-                                                         .FormBorderStyle = Windows.Forms.FormBorderStyle.None,
-                                                         .Width = 320,
-                                                         .Height = 200,
-                                                         .BackColor = System.Drawing.Color.FromArgb(255, 0, 0, 0)}
-        End If
-        m_window.Show()
+        ' Graphics screens are not drawn yet (this used to open an empty window, which only worked on Windows).
       Case Else
         Throw New NotImplementedException()
     End Select
