@@ -78,7 +78,7 @@ And this GitHub project's own list:
 * ~~Remove "self-editing".~~ (done)
 * Debug > Trace On, History On (Shift+F8 / Shift+F10) and Set Next Statement
 * ~~Replace the QuickBasic library included here with the QB.Compatibility NuGet package~~ (done; see *QuickBASIC statements*)
-* ~~Actually port GORILLA.BAS as an included sample~~ (done; see *The GORILLA sample*)
+* ~~Actually port GORILLA.BAS as an included sample~~ (done; see *The sample games*, which adds NIBBLES.BAS)
 * Install as a dotnet tool (follows the library change above)
 
 ## What QuickVB does today
@@ -103,16 +103,23 @@ Each of these is described below.
 
 ## QuickBASIC statements
 
-The QuickBASIC and QBasic statements and functions (`PRINT`, `LOCATE`, `CLS`, `OPEN`, `INKEY$`, `SOUND`, `PLAY`, `SCREEN`, `PSET`, ...) come from the [QB.Compatibility](https://github.com/DualBrain/QB.Compatibility) library (version 0.1.0-preview.1), which QuickVB carries inside itself. Nothing is added to a program until it asks for it: when the code calls a QuickBASIC statement that nothing declares, QuickVB puts the line that imports it at the top of the file (`Imports QB.Video`, or `QB.Graphics` for the drawing statements) and says so on the status line. That line is ordinary code: it stays until you take it out, and QuickVB never takes it out for you.
+The QuickBASIC and QBasic statements and functions (`PRINT`, `LOCATE`, `CLS`, `OPEN`, `INKEY$`, `SOUND`, `PLAY`, `SCREEN`, `PSET`, ...) come from the [QB.Compatibility](https://github.com/DualBrain/QB.Compatibility) library (version 0.1.1), which QuickVB carries inside itself. Nothing is added to a program until it asks for it: when the code calls a QuickBASIC statement that nothing declares, QuickVB puts the line that imports it at the top of the file (`Imports QB.Video`, or `QB.Graphics` for the drawing statements) and says so on the status line. That line is ordinary code: it stays until you take it out, and QuickVB never takes it out for you.
 
 * A program that doesn't import a `QB` namespace is compiled against nothing but .NET, and nothing extra is written next to it.
 * A program that imports `QB.Video` (and the other text namespaces) gets `QB.Compatibility.dll` next to it when it is run or made into an EXE.
 * A program that imports `QB.Graphics` also gets `QB.Compatibility.Sdl.dll`, SDL2-CS and the native SDL2 library for the platform QuickVB was built for, and draws in an SDL2 window.
 * Under the debugger a small `QuickVB.Runtime.dll` is added to the program as well.
 
-## The GORILLA sample
+## The sample games
 
-`Gorilla/GORILLA.BAS` is the original QBasic program and `Gorilla/GORILLA.vb` is the same program converted to Visual Basic for QB.Compatibility (with the `qb2vb` converter from that project). It draws, so it needs a window: open it in QuickVB with `quickvb Gorilla/GORILLA.vb` and press F5, or run it as a project with `dotnet run --project Gorilla`. The QuickVB tests compile the converted file as it is, to be sure it stays working.
+`Gorilla` and `Nibbles` are the classic QBasic games that came with QBasic, converted to Visual Basic for QB.Compatibility (with the `qb2vb` converter from that project). Each folder has the original (`GORILLA.BAS`, `NIBBLES.BAS`) next to the converted program (`GORILLA.vb`, `NIBBLES.vb`) and a project for it. Open one in QuickVB and press F5:
+
+```
+quickvb Nibbles/NIBBLES.vb
+quickvb Gorilla/GORILLA.vb
+```
+
+or run it as a project with `dotnet run --project Nibbles`. Nibbles uses the text screen; Gorilla draws, so it opens an SDL2 window. The QuickVB tests compile both converted files as they are, to be sure they stay working.
 
 ## A single file to copy (xcopy deployment)
 
