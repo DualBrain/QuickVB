@@ -31,12 +31,35 @@
   </ItemGroup>
 
   <!--
-    QuickBasic.dll travels inside QuickVB itself: programs written in QuickVB are compiled against it and need a copy next to them, and a
-    single-file QuickVB has no file to take it from.
+    The libraries a program may use travel inside QuickVB itself, so a single-file QuickVB has everything to take them from: QB.Compatibility
+    (the QuickBASIC statements; a program gets it when it imports a QB namespace), QB.Compatibility.Sdl with SDL2 (graphics), and QuickVB.Runtime
+    (the part of the debugger that runs inside the program). The packages are only a source for the files; nothing of them is referenced.
+    SDL2's native library is embedded for the platform being built for (publish with -r <rid>; otherwise this machine's).
   -->
-  <Target Name="EmbedQuickBasic" BeforeTargets="AssignTargetPaths" DependsOnTargets="ResolveReferences">
+  <PropertyGroup>
+    <QbVersion>0.1.0-preview.1</QbVersion>
+    <SdlCsVersion>1.0.82</SdlCsVersion>
+    <_SdlRid Condition="'$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</_SdlRid>
+    <_SdlRid Condition="'$(_SdlRid)' == '' and $([MSBuild]::IsOSPlatform('Windows'))">win-x64</_SdlRid>
+    <_SdlRid Condition="'$(_SdlRid)' == '' and $([MSBuild]::IsOSPlatform('OSX'))">osx-x64</_SdlRid>
+    <_SdlRid Condition="'$(_SdlRid)' == ''">linux-x64</_SdlRid>
+    <_SdlNative Condition="$(_SdlRid.StartsWith('win'))">SDL2.dll</_SdlNative>
+    <_SdlNative Condition="$(_SdlRid.StartsWith('osx'))">libSDL2.dylib</_SdlNative>
+    <_SdlNative Condition="$(_SdlRid.StartsWith('linux'))">libSDL2.so</_SdlNative>
+  </PropertyGroup>
+
+  <Target Name="EmbedLibraries" BeforeTargets="AssignTargetPaths" DependsOnTargets="ResolveReferences">
+    <PropertyGroup>
+      <_QbLib>$(NuGetPackageRoot)qb.compatibility/$(QbVersion)/lib/net10.0/</_QbLib>
+      <_QbSdlLib>$(NuGetPackageRoot)qb.compatibility.sdl/$(QbVersion)/lib/net10.0/</_QbSdlLib>
+      <_SdlCsRoot>$(NuGetPackageRoot)ppy.sdl2-cs/$(SdlCsVersion)/</_SdlCsRoot>
+    </PropertyGroup>
     <ItemGroup>
-      <EmbeddedResource Include="@(ReferenceCopyLocalPaths)" Condition="'%(Filename)%(Extension)' == 'QuickBasic.dll'" LogicalName="QuickBasic.dll" />
+      <EmbeddedResource Include="$(_QbLib)QB.Compatibility.dll" LogicalName="QB.Compatibility.dll" />
+      <EmbeddedResource Include="$(_QbSdlLib)QB.Compatibility.Sdl.dll" LogicalName="QB.Compatibility.Sdl.dll" />
+      <EmbeddedResource Include="$(_SdlCsRoot)lib/netstandard2.0/SDL2-CS.dll" LogicalName="SDL2-CS.dll" />
+      <EmbeddedResource Include="$(_SdlCsRoot)runtimes/$(_SdlRid)/native/$(_SdlNative)" LogicalName="native/$(_SdlNative)" Condition="Exists('$(_SdlCsRoot)runtimes/$(_SdlRid)/native/$(_SdlNative)')" />
+      <EmbeddedResource Include="@(ReferenceCopyLocalPaths)" Condition="'%(Filename)%(Extension)' == 'QuickVB.Runtime.dll'" LogicalName="QuickVB.Runtime.dll" />
     </ItemGroup>
   </Target>
 
@@ -74,11 +97,15 @@
     <PackageReference Include="Microsoft.CodeAnalysis.VisualBasic.Workspaces" Version="5.9.0" />
     <PackageReference Include="Basic.Reference.Assemblies.Net100" Version="1.8.12" />
     <PackageReference Include="System.CommandLine" Version="2.0.13" />
+    <!-- only a source of files to embed (see EmbedLibraries): nothing is referenced or copied -->
+    <PackageReference Include="QB.Compatibility" Version="$(QbVersion)" ExcludeAssets="all" PrivateAssets="all" />
+    <PackageReference Include="QB.Compatibility.Sdl" Version="$(QbVersion)" ExcludeAssets="all" PrivateAssets="all" />
+    <PackageReference Include="ppy.SDL2-CS" Version="$(SdlCsVersion)" ExcludeAssets="all" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ConsoleGUI\ConsoleGUI.vbproj" />
-    <ProjectReference Include="..\QuickBasic\QuickBasic.vbproj" />
+    <ProjectReference Include="..\QuickVB.Runtime\QuickVB.Runtime.vbproj" />
   </ItemGroup>
 
   <ItemGroup>

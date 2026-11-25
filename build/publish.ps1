@@ -57,7 +57,7 @@ foreach ($rid in $Runtime) {
     -o $out
   if ($LASTEXITCODE -ne 0) { throw "publish failed for $rid" }
 
-  # the other projects (ConsoleGUI, QuickBasic) leave documentation and symbol files behind; the one file is all there is
+  # the other projects (ConsoleGUI, QuickVB.Runtime) leave documentation and symbol files behind; the one file is all there is
   $name = if ($rid -like 'win-*') { 'quickvb.exe' } else { 'quickvb' }
   $built = Get-ChildItem $out -File | Where-Object { $_.BaseName -eq 'QuickVB' -and ($_.Extension -in '.exe', '') }
   Get-ChildItem $out -File | Where-Object { $_.FullName -ne $built.FullName } | Remove-Item -Force

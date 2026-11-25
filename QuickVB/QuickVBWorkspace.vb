@@ -56,7 +56,7 @@ Public Class QuickVBWorkspace
         End If
       End If
 
-      refs.Add(MetadataReference.CreateFromImage(QuickBasicLibrary.Image()))
+      refs.AddRange(QBLibrary.MetadataReferences())
 
       _references = refs
 
@@ -71,9 +71,7 @@ Public Class QuickVBWorkspace
     Dim metadataReferences = GetMetadataReferences()
     Dim opts As New VisualBasic.VisualBasicCompilationOptions(OutputKind.ConsoleApplication,
                                                               globalImports:=VisualBasic.GlobalImport.Parse({"System",
-                                                                                                             "Microsoft.VisualBasic",
-                                                                                                             "QuickBasic.Constants",
-                                                                                                             "QuickBasic.Compatibility"}),
+                                                                                                             "Microsoft.VisualBasic"}),
                                                               optionExplicit:=False,
                                                               optionStrict:=VisualBasic.OptionStrict.Off,
                                                               optionInfer:=False,
@@ -186,6 +184,17 @@ Public Class QuickVBWorkspace
 
   ' Compilation:
 
+  ''' <summary>The QB namespaces the last background compile found programs asking for (see <see cref="QBLibrary.MissingImports"/>), by file path.</summary>
+  Public Property MissingQbImports As Dictionary(Of String, List(Of String)) = New Dictionary(Of String, List(Of String))()
+
+  Private Sub NoteMissingImports(compilation As Compilation)
+    Try
+      Me.MissingQbImports = QBLibrary.MissingImports(compilation)
+    Catch ex As Exception When TypeOf ex Is InvalidOperationException OrElse TypeOf ex Is ArgumentException
+      ' a compilation that cannot be asked: nothing is added
+    End Try
+  End Sub
+
   Public Function BuildProgram() As List(Of Diagnostic)
     Return Me.CompileProgram(False)
   End Function
@@ -212,10 +221,10 @@ Public Class QuickVBWorkspace
     If Not background Then
       If Directory.Exists(BinFolder) Then Directory.Delete(BinFolder, True)
       Directory.CreateDirectory(BinFolder)
-
-      ' Programs written in QuickVB use the QuickBasic compatibility library (PRINT, etc.); it must sit next to them.
-      File.WriteAllBytes(System.IO.Path.Combine(BinFolder, "QuickBasic.dll"), QuickBasicLibrary.Image())
     End If
+
+    ' the libraries (QB.Compatibility, ...) the program turns out to use; they must sit next to it
+    Dim used As New HashSet(Of String)(StringComparer.OrdinalIgnoreCase)
 
     ' Builds all .DLLs before all .EXEs
 
@@ -225,6 +234,7 @@ Public Class QuickVBWorkspace
 
       Dim compilation = project.GetCompilationAsync(cancel).Result
       If transform IsNot Nothing Then compilation = transform(compilation)
+      If background Then Me.NoteMissingImports(compilation)
       Dim projectDiagnostics = compilation.GetDiagnostics(cancel)
 
       If background Then
@@ -246,10 +256,13 @@ Public Class QuickVBWorkspace
           End If
 
           diagnostics.AddRange(result.Diagnostics)
+          If result.Success Then used.UnionWith(QBLibrary.LibrariesUsedBy(compilation))
         End Using
       End If
 
     Next
+
+    If Not background Then QBLibrary.WriteTo(BinFolder, used)
 
     Return diagnostics.OrderByDescending(Function(diagnostic) diagnostic.Severity).ToList
 
@@ -361,7 +374,7 @@ Public Class QuickVBWorkspace
   ''' number them. Returns the diagnostics of the build; the program is only usable when none of them is an error.
   ''' </summary>
   Public Function BuildDebugProgram(fileNames As List(Of String), captureVariables As Boolean) As List(Of Diagnostic)
-    Return Me.CompileProgram(False, Nothing, Function(compilation) Instrumenter.Instrument(compilation, captureVariables, fileNames))
+    Return Me.CompileProgram(False, Nothing, Function(compilation) Instrumenter.Instrument(compilation.AddReferences(QBLibrary.RuntimeReference()), captureVariables, fileNames))
   End Function
 
   ''' <summary>A session for the program that <see cref="BuildDebugProgram"/> built (it is not started yet).</summary>
@@ -460,8 +473,8 @@ Public Class QuickVBWorkspace
   End Sub
 
   ''' <summary>
-  ''' Builds the program and writes it as <paramref name="destination"/> (an .exe launcher) with its .dll, runtime configuration and the QuickBasic
-  ''' library beside it. Returns the build's diagnostics; nothing is written when any is an error.
+  ''' Builds the program and writes it as <paramref name="destination"/> (an .exe launcher) with its .dll, runtime configuration and the libraries
+  ''' it uses beside it. Returns the build's diagnostics; nothing is written when any is an error.
   ''' </summary>
   Public Function MakeExecutable(destination As String, includeDebugSymbols As Boolean) As List(Of Diagnostic)
 
@@ -477,7 +490,9 @@ Public Class QuickVBWorkspace
 
     File.Copy(Me.EnsureExtension(built, ".dll"), IO.Path.Combine(folder, baseName & ".dll"), True)
     File.Copy(built & ".runtimeconfig.json", IO.Path.Combine(folder, baseName & ".runtimeconfig.json"), True)
-    File.Copy(IO.Path.Combine(BinFolder, "QuickBasic.dll"), IO.Path.Combine(folder, "QuickBasic.dll"), True)
+    For Each name In QBLibrary.FileNamesIn(BinFolder)
+      File.Copy(IO.Path.Combine(BinFolder, name), IO.Path.Combine(folder, name), True)
+    Next
     If includeDebugSymbols Then File.Copy(built & ".pdb", IO.Path.Combine(folder, baseName & ".pdb"), True)
 
     WriteAppHost(IO.Path.Combine(folder, baseName & ExecutableSuffix), baseName & ".dll")

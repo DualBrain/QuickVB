@@ -1777,6 +1777,7 @@ Partial Public Class MyScreen
           ' with Syntax Checking off nothing is flagged until the program is run
           ' (and nothing is said about a program that has not been started: an empty editor is not an error)
           Me.UpdateDiagnostics(If(Me._syntaxChecking AndAlso Not Me.IsProgramBlank(), diagnostics, Nothing))
+          Me.AddMissingQbImports()
         End Sub)
   End Sub
 

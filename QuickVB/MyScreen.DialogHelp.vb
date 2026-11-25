@@ -31,7 +31,7 @@ Partial Public Class MyScreen
     {"Delete Watch", {"Choose the watch expression to remove."}},
     {"Instant Watch", {"The value of the expression at the cursor right now.", "Add Watch keeps it in the Watch window."}},
     {"Modify COMMAND$", {"The text the program receives as COMMAND$."}},
-    {"Make EXE File", {"Writes a program that runs without QuickVB. It needs the", ".NET runtime and the QuickBasic.dll next to it."}},
+    {"Make EXE File", {"Writes a program that runs without QuickVB. It needs the", ".NET runtime and the QB.Compatibility.dll it uses next to it."}},
     {"Make Library", {"Writes the program as a library (.dll) other programs can use."}}
   }
 
