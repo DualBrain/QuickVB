@@ -66,6 +66,15 @@ Namespace ConsoleGUI
       Me.MouseEventFlags = mouseEventFlags
     End Sub
 
+    ''' <summary>How far the wheel turned: positive is up (away from the user), 120 per notch; 0 when this isn't a wheel event.</summary>
+    Public ReadOnly Property WheelDelta() As Integer
+      Get
+        If (Me.MouseEventFlags And MouseEventFlags.MOUSE_WHEELED) = 0 Then Return 0
+        Dim high = CInt((CUInt(Me.ButtonState) >> 16) And &HFFFFUI)
+        Return If(high >= &H8000, high - &H10000, high)
+      End Get
+    End Property
+
   End Class
 
   Public Class BufferSizeEvent

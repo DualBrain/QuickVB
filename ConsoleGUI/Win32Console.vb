@@ -14,7 +14,7 @@ Imports Microsoft.Win32.SafeHandles
 Namespace ConsoleGUI
 
   Friend NotInheritable Class Win32Console
-    Implements IDisposable
+    Implements IConsoleDriver
 
     Private _disposed As Boolean = False
 
@@ -41,7 +41,7 @@ Namespace ConsoleGUI
 
     End Sub
 
-    Public Sub Dispose() Implements IDisposable.Dispose
+    Public Sub Dispose() Implements IConsoleDriver.Dispose
 
       If Not Me._disposed Then
 
@@ -56,18 +56,20 @@ Namespace ConsoleGUI
 
     End Sub
 
-    Friend Sub PostEvent([event] As ConsoleEvent)
+    Public Sub PostEvent([event] As ConsoleEvent) Implements IConsoleDriver.PostEvent
       Me.clientEventQueue.Enqueue([event])
       Me.clientEvent.Set()
     End Sub
 
-    Friend Sub EnableInputEvents()
+    Public Sub EnableInputEvents() Implements IConsoleDriver.EnableInputEvents
 
       If Not GetConsoleMode(Me._handleIn, Me._originalConsoleMode) Then
         Throw New Exception("GetConsoleMode failed")
       End If
 
-      If Not SetConsoleMode(Me._handleIn, ConsoleMode.ENABLE_MOUSE_INPUT Or ConsoleMode.ENABLE_WINDOW_INPUT) Then
+      ' Quick Edit (the terminal's own text selection) swallows mouse clicks; leaving ENABLE_QUICK_EDIT_MODE out while setting
+      ' ENABLE_EXTENDED_FLAGS turns it off so the mouse events reach the program.
+      If Not SetConsoleMode(Me._handleIn, ConsoleMode.ENABLE_MOUSE_INPUT Or ConsoleMode.ENABLE_WINDOW_INPUT Or ConsoleMode.ENABLE_EXTENDED_FLAGS) Then
         Throw New Exception("SetConsoleMode failed")
       End If
 
@@ -75,7 +77,7 @@ Namespace ConsoleGUI
 
     End Sub
 
-    Friend Function GetBufferDimensions() As Dimensions
+    Public Function GetBufferDimensions() As Dimensions Implements IConsoleDriver.GetBufferDimensions
 
       Dim info As CONSOLE_SCREEN_BUFFER_INFO
 
@@ -87,7 +89,7 @@ Namespace ConsoleGUI
 
     End Function
 
-    Friend Sub WriteOutputBuffer(bufferChars() As Char, bufferFg() As ConsoleColor, bufferBg() As ConsoleColor, width As Integer, height As Integer, invalidSpans As List(Of RowSpan))
+    Public Sub WriteOutputBuffer(bufferChars() As Char, bufferFg() As ConsoleColor, bufferBg() As ConsoleColor, width As Integer, height As Integer, invalidSpans As List(Of RowSpan)) Implements IConsoleDriver.WriteOutputBuffer
 
       ' This copying of the backbuffer data into a local CHAR_INFO array is a lot of
       ' copying that might be a perf issue.  If so consider storing a CHAR_INFO array
@@ -144,7 +146,7 @@ Namespace ConsoleGUI
       Return CUShort(CUShort(fg) Or (CUShort(bg) << 4))
     End Function
 
-    Friend Function GetNextEvent() As ConsoleEvent
+    Public Function GetNextEvent() As ConsoleEvent Implements IConsoleDriver.GetNextEvent
 
       ' TODO: How to handle timing events?
 
@@ -152,7 +154,15 @@ Namespace ConsoleGUI
 
       Do While ev Is Nothing
 
-        Dim whichEvent As Integer = WaitHandle.WaitAny({Me.consoleEvent, Me.clientEvent})
+        ' While suspended the console belongs to a program that was started (its keys are not ours), so only posted events are waited for
+        Dim whichEvent As Integer
+
+        If Me._suspended Then
+          Me.clientEvent.WaitOne()
+          whichEvent = 1
+        Else
+          whichEvent = WaitHandle.WaitAny({Me.consoleEvent, Me.clientEvent})
+        End If
 
         Select Case whichEvent
           Case 0
@@ -170,6 +180,29 @@ Namespace ConsoleGUI
       Return ev
 
     End Function
+
+    Public Sub SetCursorPosition(x As Integer, y As Integer) Implements IConsoleDriver.SetCursorPosition
+      Console.SetCursorPosition(x, y)
+    End Sub
+
+    Public Sub SetCursorVisible(visible As Boolean) Implements IConsoleDriver.SetCursorVisible
+      Console.CursorVisible = visible
+    End Sub
+
+    Private _suspended As Boolean
+
+    Public Sub Suspend() Implements IConsoleDriver.Suspend
+      Me._suspended = True
+      If Me._needRestoreConsoleMode Then
+        SetConsoleMode(Me._handleIn, Me._originalConsoleMode)
+        Me._needRestoreConsoleMode = False
+      End If
+    End Sub
+
+    Public Sub Reactivate() Implements IConsoleDriver.Reactivate
+      Me._suspended = False
+      Me.EnableInputEvents()
+    End Sub
 
     Private Function GetClientEvent() As ConsoleEvent
       Dim ev As ConsoleEvent = Nothing

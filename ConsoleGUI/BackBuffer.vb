@@ -1,4 +1,4 @@
-' Original version Copyright (c) Microsoft Corporation.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿' Original version Copyright (c) Microsoft Corporation.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 ' Improvements Copyright (c) Cory Smith.  All Rights Reserved.
 
 Option Explicit On
@@ -36,6 +36,15 @@ Namespace ConsoleGUI
         Me._frontbufferChars(i) = " "c
         Me._frontbufferForegroundColors(i) = fgColor
         Me._frontbufferBackgroundColors(i) = bgColor
+        Me._backbufferChars(i) = " "c
+        Me._backbufferForegroundColors(i) = fgColor
+        Me._backbufferBackgroundColors(i) = bgColor
+      Next
+    End Sub
+
+    ''' <summary>Blanks only the back buffer, so the next frame is drawn on a clean background and still diffed against what is on screen.</summary>
+    Friend Sub ClearBackbuffer(fgColor As ConsoleColor, bgColor As ConsoleColor)
+      For i = 0 To Me._backbufferChars.Length - 1
         Me._backbufferChars(i) = " "c
         Me._backbufferForegroundColors(i) = fgColor
         Me._backbufferBackgroundColors(i) = bgColor
@@ -97,7 +106,7 @@ Namespace ConsoleGUI
       End Get
     End Property
 
-    Friend Sub CopyToConsole(console As Win32Console)
+    Friend Sub CopyToConsole(console As IConsoleDriver)
 
       Dim dirtyRows(Me._bufferDimensions.Height - 1) As Boolean
 
@@ -151,13 +160,13 @@ Namespace ConsoleGUI
       Return (Me._frontbufferChars(index) <> Me._backbufferChars(index) OrElse Me._frontbufferForegroundColors(index) <> Me._backbufferForegroundColors(index) OrElse Me._frontbufferBackgroundColors(index) <> Me._backbufferBackgroundColors(index))
     End Function
 
-    Friend Sub RestoreBufferToScreen(console As Win32Console)
+    Friend Sub RestoreBufferToScreen(console As IConsoleDriver)
       console.WriteOutputBuffer(Me._frontbufferChars, Me._frontbufferForegroundColors, Me._frontbufferBackgroundColors, Me._bufferDimensions.Width, Me._bufferDimensions.Height, Nothing)
     End Sub
 
   End Structure
 
-  Friend Class RowSpan
+  Public Class RowSpan
 
     Public Sub New(row As Integer, start As Integer, [end] As Integer)
       Me.Row = row

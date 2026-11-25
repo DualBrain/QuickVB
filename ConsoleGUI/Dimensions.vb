@@ -11,10 +11,10 @@ Namespace ConsoleGUI
 
   Public Structure Dimensions
 
-    Friend Property Width() As Integer
-    Friend Property Height() As Integer
+    Public Property Width() As Integer
+    Public Property Height() As Integer
 
-    Friend Sub New(width As Integer, height As Integer)
+    Public Sub New(width As Integer, height As Integer)
       'Me.New()
       Me.Width = width
       Me.Height = height
