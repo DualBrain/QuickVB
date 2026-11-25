@@ -200,17 +200,29 @@ Public Module QBLibrary
 
         Dim target As String = Nothing
         If Not keywords.TryGetValue(node.Identifier.ValueText, target) Then Continue For
-        If existing.Contains(target) OrElse needed.Contains(target) Then Continue For
         If Not IsStatementPosition(node) Then Continue For
 
-        ' something the program declares (a variable, a procedure of its own) is not a QuickBASIC statement
         Dim info = model.GetSymbolInfo(node)
-        If info.Symbol IsNot Nothing AndAlso Not IsImplicitVariable(info.Symbol) Then Continue For
+
+        ' SCREEN 9 (any mode but 0) draws: that is QB.Graphics, which has everything QB.Video has and the SDL2 window besides
+        Dim drawing = target = "QB.Video" AndAlso IsDrawingScreen(node, model)
+        If drawing Then
+          If info.Symbol IsNot Nothing AndAlso Not IsLibrarySymbol(info.Symbol) Then Continue For
+          target = "QB.Graphics"
+        End If
+
+        If existing.Contains(target) OrElse needed.Contains(target) Then Continue For
+
+        ' something the program declares (a variable, a procedure of its own) is not a QuickBASIC statement
+        If Not drawing AndAlso info.Symbol IsNot Nothing AndAlso Not IsImplicitVariable(info.Symbol) Then Continue For
         If info.CandidateSymbols.Any(Function(s) s.ContainingAssembly Is Nothing OrElse s.ContainingAssembly.Identity.Name <> "Microsoft.VisualBasic") AndAlso info.Symbol Is Nothing Then Continue For
 
         needed.Add(target)
 
       Next
+
+      ' QB.Graphics holds everything QB.Video does
+      If needed.Contains("QB.Graphics") Then needed.Remove("QB.Video")
 
       If needed.Count > 0 Then result(tree.FilePath) = needed
 
@@ -218,6 +230,33 @@ Public Module QBLibrary
 
     Return result
 
+  End Function
+
+  ' SCREEN(9): a call whose mode is a constant other than 0
+  Private Function IsDrawingScreen(node As IdentifierNameSyntax, model As SemanticModel) As Boolean
+
+    If Not String.Equals(node.Identifier.ValueText, "SCREEN", StringComparison.OrdinalIgnoreCase) Then Return False
+
+    Dim call_ = TryCast(node.Parent, InvocationExpressionSyntax)
+    If call_ Is Nothing OrElse Not Object.ReferenceEquals(call_.Expression, node) Then Return False
+    If call_.ArgumentList Is Nothing OrElse call_.ArgumentList.Arguments.Count = 0 Then Return False
+
+    Dim first = TryCast(call_.ArgumentList.Arguments(0), SimpleArgumentSyntax)
+    If first Is Nothing Then Return False
+
+    Dim value = model.GetConstantValue(first.Expression)
+    If Not value.HasValue Then Return False
+
+    Try
+      Return Convert.ToInt32(value.Value, Globalization.CultureInfo.InvariantCulture) <> 0
+    Catch ex As Exception When TypeOf ex Is InvalidCastException OrElse TypeOf ex Is FormatException OrElse TypeOf ex Is OverflowException
+      Return False
+    End Try
+
+  End Function
+
+  Private Function IsLibrarySymbol(symbol As ISymbol) As Boolean
+    Return symbol.ContainingNamespace IsNot Nothing AndAlso symbol.ContainingNamespace.Name = "QB"
   End Function
 
   ' LOCATE 1, 1 / LOCATE(1, 1) / CLS: the name is called, or stands alone as a statement

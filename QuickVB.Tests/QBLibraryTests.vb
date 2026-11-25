@@ -104,6 +104,40 @@ Public Class QBLibraryTests
   End Sub
 
   <Fact>
+  Public Sub ScreenWithAGraphicsModeAsksForGraphicsNotVideo()
+    Dim built = Build("Module Demo" & vbLf & "  Sub Main()" & vbLf & "    SCREEN(9)" & vbLf & "    PRINT(""hi"")" & vbLf & "  End Sub" & vbLf & "End Module")
+
+    Dim missing = QBLibrary.MissingImports(built.Workspace.CurrentSolution.Projects.First().GetCompilationAsync().Result)
+
+    Assert.Equal({"QB.Graphics"}, missing.Single().Value)   ' QB.Graphics has PRINT too
+  End Sub
+
+  <Fact>
+  Public Sub ScreenZeroIsText()
+    Dim built = Build("Module Demo" & vbLf & "  Sub Main()" & vbLf & "    SCREEN(0)" & vbLf & "  End Sub" & vbLf & "End Module")
+
+    Dim missing = QBLibrary.MissingImports(built.Workspace.CurrentSolution.Projects.First().GetCompilationAsync().Result)
+
+    Assert.Equal({"QB.Video"}, missing.Single().Value)
+  End Sub
+
+  <Fact>
+  Public Sub ImportingVideoDoesNotHideAProgramThatDraws()
+    Dim built = Build("Imports QB.Video" & vbLf & "Module Demo" & vbLf & "  Sub Main()" & vbLf & "    SCREEN(9)" & vbLf & "    PRINT(""hi"")" & vbLf & "  End Sub" & vbLf & "End Module")
+
+    Dim missing = QBLibrary.MissingImports(built.Workspace.CurrentSolution.Projects.First().GetCompilationAsync().Result)
+
+    Assert.Equal({"QB.Graphics"}, missing.Single().Value)
+  End Sub
+
+  <Fact>
+  Public Sub NothingIsAskedForWhenGraphicsIsAlreadyImported()
+    Dim built = Build("Imports QB.Graphics" & vbLf & "Module Demo" & vbLf & "  Sub Main()" & vbLf & "    SCREEN(9)" & vbLf & "    PRINT(""hi"")" & vbLf & "  End Sub" & vbLf & "End Module")
+
+    Assert.Empty(QBLibrary.MissingImports(built.Workspace.CurrentSolution.Projects.First().GetCompilationAsync().Result))
+  End Sub
+
+  <Fact>
   Public Sub ABareStatementCountsToo()
     Dim built = Build("Module Demo" & vbLf & "  Sub Main()" & vbLf & "    CLS" & vbLf & "  End Sub" & vbLf & "End Module")
 

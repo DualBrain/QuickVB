@@ -358,6 +358,17 @@ Public Class EditorKeysTests
   End Sub
 
   <Fact>
+  Public Sub AProgramThatDrawsGetsGraphicsInPlaceOfVideo()
+    Dim s As New Session("Imports QB.Video" & vbLf & vbLf & "Module M" & vbLf & "  Sub Main()" & vbLf & "    SCREEN(9)" & vbLf & "    PRINT(""hi"")" & vbLf & "  End Sub" & vbLf & "End Module")
+
+    WaitFor(s, Function() s.Ui.EditorView.Buffer.Text.Contains("Imports QB.Graphics"))
+
+    Dim lines = s.Ui.EditorView.Buffer.Lines.Select(Function(l) l.Text).ToList()
+    Assert.Equal("Imports QB.Graphics", lines(0))
+    Assert.DoesNotContain("Imports QB.Video", s.Ui.EditorView.Buffer.Text)
+  End Sub
+
+  <Fact>
   Public Sub TheImportGoesBelowTheOptionAndImportsLinesThereAlready()
     Dim s As New Session("Option Explicit On" & vbLf & "Imports System" & vbLf & vbLf & "Module M" & vbLf & "  Sub Main()" & vbLf & "    LOCATE(1, 1)" & vbLf & "  End Sub" & vbLf & "End Module")
 

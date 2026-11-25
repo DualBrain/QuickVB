@@ -28,11 +28,18 @@ Partial Public Class MyScreen
       Dim buffer = TryCast(view.Buffer, DocumentTextBuffer)
       If buffer Is Nothing OrElse view.IsReadOnly Then Continue For
 
+      ' QB.Graphics replaces QB.Video (it has all of it; having both makes SCREEN and the like ambiguous)
+      Dim video = If(needed.Contains("QB.Graphics"), VideoImportRow(buffer), -1)
       Dim row = ImportsRow(buffer)
       Dim cursorRow = view.CursorRow
       Dim cursorColumn = view.CursorColumn
 
       view.Edit(Sub()
+                  If video >= 0 Then
+                    buffer.RemoveLine(video)
+                    buffer.InsertLine(video, "Imports QB.Graphics")
+                    needed = needed.Where(Function(n) n <> "QB.Graphics").ToList()
+                  End If
                   For Each name In needed
                     buffer.InsertLine(row, "Imports " & name)
                     row += 1
@@ -49,6 +56,17 @@ Partial Public Class MyScreen
     Next
 
   End Sub
+
+  ' the row of the file's Imports QB.Video line, or -1
+  Private Shared Function VideoImportRow(buffer As TextBuffer) As Integer
+
+    For i = 0 To buffer.Lines.Count - 1
+      If String.Equals(buffer.Lines(i).Text.Trim(), "Imports QB.Video", StringComparison.OrdinalIgnoreCase) Then Return i
+    Next
+
+    Return -1
+
+  End Function
 
   ' below the Option and Imports lines the file starts with (or below its opening comments when it has none)
   Private Shared Function ImportsRow(buffer As TextBuffer) As Integer
