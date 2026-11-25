@@ -169,4 +169,44 @@ Public Class QBLibraryTests
     Assert.Equal(draws, File.Exists(BinFile("QB.Compatibility.Sdl.dll")))
   End Sub
 
+  Private Shared Function SubsystemOf(path As String) As System.Reflection.PortableExecutable.Subsystem
+    Using stream = File.OpenRead(path)
+      Using reader As New System.Reflection.PortableExecutable.PEReader(stream)
+        Return reader.PEHeaders.PEHeader.Subsystem
+      End Using
+    End Using
+  End Function
+
+  <Fact>
+  Public Sub AProgramThatDrawsIsBuiltAsAWindowsProgram()
+    Dim built = Build("Imports QB.Graphics" & vbLf & "Module Demo" & vbLf & "  Sub Main()" & vbLf & "    SCREEN(1)" & vbLf & "    PSET(10, 10)" & vbLf & "  End Sub" & vbLf & "End Module")
+
+    Assert.Empty(built.Diagnostics.Where(Function(d) d.Severity = DiagnosticSeverity.Error))
+    Assert.True(built.Workspace.IsWindowedProgram)
+    Assert.Equal(System.Reflection.PortableExecutable.Subsystem.WindowsGui, SubsystemOf(BinFile("Demo.dll")))
+  End Sub
+
+  <Fact>
+  Public Sub ATextProgramStaysAConsoleProgram()
+    Dim built = Build("Imports QB.Video" & vbLf & "Module Demo" & vbLf & "  Sub Main()" & vbLf & "    PRINT(""hi"")" & vbLf & "  End Sub" & vbLf & "End Module")
+
+    Assert.False(built.Workspace.IsWindowedProgram)
+    Assert.Equal(System.Reflection.PortableExecutable.Subsystem.WindowsCui, SubsystemOf(BinFile("Demo.dll")))
+  End Sub
+
+  <Fact>
+  Public Sub ALauncherForAProgramThatDrawsIsAWindowsProgramToo()
+    Dim image = {CByte(&H4D), CByte(&H5A)}.Concat(New Byte(&H200) {}).ToArray()   ' a minimal "executable": MZ, a PE header at 0x80
+    BitConverter.GetBytes(&H80).CopyTo(image, &H3C)
+    image(&H80) = &H50 : image(&H81) = &H45
+    image(&H80 + 24 + 68) = 3
+
+    QuickVBWorkspace.SetWindowsSubsystem(image)
+    Assert.Equal(2, image(&H80 + 24 + 68))
+
+    Dim notAnExecutable = {CByte(1), CByte(2), CByte(3)}.Concat(New Byte(&H200) {}).ToArray()
+    QuickVBWorkspace.SetWindowsSubsystem(notAnExecutable)   ' left alone
+    Assert.Equal(CByte(0), notAnExecutable(&H80 + 24 + 68))
+  End Sub
+
 End Class

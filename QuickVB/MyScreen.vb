@@ -1673,7 +1673,15 @@ Partial Public Class MyScreen
     Dim diagnostics As List(Of Diagnostic)
 
     Try
-      diagnostics = App.TheWorkspace.RunProgram(Me, Me._commandLine)
+      Dim name = Me.ProgramName()
+      diagnostics = App.TheWorkspace.RunProgram(Me, Me._commandLine,
+                                                Sub(exitCode)
+                                                  Me.SetStatus(name & " ended" & If(exitCode <> 0, " (exit code " & exitCode & ")", "") & ".", exitCode <> 0)
+                                                  Me.Invalidate()
+                                                End Sub)
+      If App.TheWorkspace.IsWindowedProgram AndAlso OperatingSystem.IsWindows() AndAlso Not diagnostics.Any(Function(d) d.Severity = DiagnosticSeverity.Error) Then
+        Me.SetStatus(name & " is running in its own window. Close the window to come back to it here.", False)
+      End If
     Catch ex As InvalidOperationException
       Me.SetStatus(ex.Message, True)
       Me.ShowMessage(ex.Message)

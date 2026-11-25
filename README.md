@@ -109,17 +109,13 @@ The QuickBASIC and QBasic statements and functions (`PRINT`, `LOCATE`, `CLS`, `O
 * A program that imports `QB.Video` (and the other text namespaces) gets `QB.Compatibility.dll` next to it when it is run or made into an EXE.
 * A program that imports `QB.Graphics` also gets `QB.Compatibility.Sdl.dll`, SDL2-CS and the native SDL2 library for the platform QuickVB was built for, and draws in an SDL2 window.
 * Under the debugger a small `QuickVB.Runtime.dll` is added to the program as well.
+* A program that draws is built as a Windows program (WinExe) instead of a console one. On Windows, running it (F5) leaves QuickVB's screen as it is: the program has no console, so its text appears in its own window too, and the status line says when it has ended. Make EXE File writes it a launcher with no console window. On Linux and macOS, and under the debugger, a program that draws still runs in the terminal, with its window beside it.
 
 ## The sample games
 
-`Gorilla` and `Nibbles` are the classic QBasic games that came with QBasic, converted to Visual Basic for QB.Compatibility (with the `qb2vb` converter from that project). Each folder has the original (`GORILLA.BAS`, `NIBBLES.BAS`) next to the converted program (`GORILLA.vb`, `NIBBLES.vb`) and a project for it. Open one in QuickVB and press F5:
+`Gorilla` and `Nibbles` are the classic QBasic games that came with QBasic, converted to Visual Basic for QB.Compatibility (with the `qb2vb` converter from that project). They are part of QuickVB itself: **File > Samples** lists them, **Open** shows the chosen one in the editor (press F5 to play) and **Save As...** writes a copy to a file of your own, to keep and change. Nibbles uses the text screen; Gorilla draws, so it opens an SDL2 window. More samples can be added the same way.
 
-```
-quickvb Nibbles/NIBBLES.vb
-quickvb Gorilla/GORILLA.vb
-```
-
-or run it as a project with `dotnet run --project Nibbles`. Nibbles uses the text screen; Gorilla draws, so it opens an SDL2 window. The QuickVB tests compile both converted files as they are, to be sure they stay working.
+In the source tree each folder has the original (`GORILLA.BAS`, `NIBBLES.BAS`) next to the converted program (`GORILLA.vb`, `NIBBLES.vb`) and a project for it (`dotnet run --project Nibbles`); the converted files are what QuickVB embeds. The QuickVB tests compile both as they are, to be sure they stay working.
 
 ## A single file to copy (xcopy deployment)
 

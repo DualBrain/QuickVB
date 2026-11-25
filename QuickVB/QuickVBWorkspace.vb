@@ -208,6 +208,30 @@ Public Class QuickVBWorkspace
     End Get
   End Property
 
+  Private _windowed As Boolean
+  Private Shared _windowedProgram As Process
+
+  ''' <summary>True when the program last built draws in a window (it is built as a Windows program, not a console one).</summary>
+  Public ReadOnly Property IsWindowedProgram As Boolean
+    Get
+      Return Me._windowed
+    End Get
+  End Property
+
+  ''' <summary>Closes the program that is showing its window, if there is one.</summary>
+  Public Shared Sub StopWindowedProgram()
+    Dim running = Interlocked.Exchange(_windowedProgram, Nothing)
+    If running Is Nothing Then Return
+    Try
+      If Not running.HasExited Then
+        running.Kill(True)
+        running.WaitForExit(5000)
+      End If
+    Catch ex As Exception When TypeOf ex Is InvalidOperationException OrElse TypeOf ex Is System.ComponentModel.Win32Exception
+      ' it ended by itself
+    End Try
+  End Sub
+
   ''' <summary>The folder a program runs in, so that the files it opens by a plain name are found next to its source (Nothing: where QuickVB was started).</summary>
   Public Property ProgramDirectory As String
 
@@ -221,6 +245,9 @@ Public Class QuickVBWorkspace
     Dim diagnostics As New List(Of Diagnostic)
 
     If Not background Then
+      ' a program still showing its window has its files locked
+      StopWindowedProgram()
+      Me._windowed = False
       If Directory.Exists(BinFolder) Then Directory.Delete(BinFolder, True)
       Directory.CreateDirectory(BinFolder)
     End If
@@ -237,6 +264,14 @@ Public Class QuickVBWorkspace
       Dim compilation = project.GetCompilationAsync(cancel).Result
       If transform IsNot Nothing Then compilation = transform(compilation)
       If background Then Me.NoteMissingImports(compilation)
+
+      ' a program that draws (it uses the SDL2 window library) is a Windows program: it has no console of its own
+      If Not background AndAlso transform Is Nothing AndAlso compilation.Options.OutputKind = OutputKind.ConsoleApplication AndAlso
+         QBLibrary.LibrariesUsedBy(compilation).Contains(QBLibrary.Sdl) Then
+        compilation = compilation.WithOptions(compilation.Options.WithOutputKind(OutputKind.WindowsApplication))
+        Me._windowed = True
+      End If
+
       Dim projectDiagnostics = compilation.GetDiagnostics(cancel)
 
       If background Then
@@ -321,7 +356,7 @@ Public Class QuickVBWorkspace
   Public Const DotnetMissingMessage As String = "Unable to start 'dotnet': the .NET runtime must be installed and on the PATH to run programs."
 
   ''' <summary>Builds and runs the program. Returns the build's diagnostics; when any is an error the program was not run.</summary>
-  Public Function RunProgram(screen As Screen, Optional commandLine As String = "") As List(Of Diagnostic)
+  Public Function RunProgram(screen As Screen, Optional commandLine As String = "", Optional onWindowClosed As Action(Of Integer) = Nothing) As List(Of Diagnostic)
 
     Dim noDiagnostics As New List(Of Diagnostic)()
 
@@ -336,6 +371,12 @@ Public Class QuickVBWorkspace
     Dim errorDiagnostics = diagnostics.Where(Function(diagnostic) diagnostic.Severity = DiagnosticSeverity.Error)
 
     If errorDiagnostics.Any() Then Return diagnostics
+
+    ' a program that draws shows its window and leaves QuickVB's screen alone (it comes back with the window closed)
+    If Me._windowed AndAlso OperatingSystem.IsWindows() Then
+      Me.StartWindowed(screen, path, commandLine, onWindowClosed)
+      Return diagnostics
+    End If
 
     screen.SuspendConsole()
     Try
@@ -368,6 +409,61 @@ Public Class QuickVBWorkspace
     Return diagnostics
 
   End Function
+
+  ''' <summary>
+  ''' Starts a program that draws as a Windows program: a launcher with no console, so that the program has nowhere to print text to and
+  ''' shows it in its window as well. QuickVB's own screen stays as it is, and <paramref name="onClosed"/> hears the exit code.
+  ''' </summary>
+  Private Sub StartWindowed(screen As Screen, dllPath As String, commandLine As String, onClosed As Action(Of Integer))
+
+    Dim info As ProcessStartInfo
+    Dim redirected = False
+    Dim launcher = IO.Path.ChangeExtension(dllPath, ".exe")
+
+    Try
+      WriteAppHost(launcher, IO.Path.GetFileName(dllPath), True)
+      info = New ProcessStartInfo(launcher, If(commandLine, ""))
+    Catch ex As Exception When TypeOf ex Is FileNotFoundException OrElse TypeOf ex Is InvalidDataException
+      ' no apphost template (no SDK to take it from): dotnet itself, its console kept out of the way
+      info = New ProcessStartInfo(DotnetHost(), ControlChars.Quote & dllPath & ControlChars.Quote & If(String.IsNullOrEmpty(commandLine), "", " " & commandLine)) With {
+        .RedirectStandardInput = True, .RedirectStandardOutput = True, .RedirectStandardError = True, .CreateNoWindow = True}
+      redirected = True
+    End Try
+
+    info.UseShellExecute = False
+    info.WorkingDirectory = Me.RunFolder()
+
+    Dim proc As Process
+
+    Try
+      proc = Process.Start(info)
+    Catch ex As System.ComponentModel.Win32Exception
+      Throw New InvalidOperationException(DotnetMissingMessage, ex)
+    End Try
+
+    If redirected Then
+      proc.StandardInput.Close()
+      AddHandler proc.OutputDataReceived, Sub(sender, e) Return
+      AddHandler proc.ErrorDataReceived, Sub(sender, e) Return
+      proc.BeginOutputReadLine()
+      proc.BeginErrorReadLine()
+    End If
+
+    _windowedProgram = proc
+    proc.EnableRaisingEvents = True
+    AddHandler proc.Exited,
+      Sub(sender, e)
+        If onClosed Is Nothing Then Return
+        Dim code As Integer
+        Try
+          code = proc.ExitCode
+        Catch ex As InvalidOperationException
+          code = 0
+        End Try
+        screen.Post(Sub() onClosed(code))
+      End Sub
+
+  End Sub
 
   ' ---- debugging
 
@@ -418,6 +514,21 @@ Public Class QuickVBWorkspace
 
   End Function
 
+  ''' <summary>Changes a Windows executable from a console program to a Windows (GUI) program; anything else is left as it is.</summary>
+  Friend Shared Sub SetWindowsSubsystem(image As Byte())
+
+    ' "MZ", then at 0x3C where the PE header is; in it "PE" 0 0, the 20 byte file header and an optional header whose subsystem is at 68
+    If image.Length < &H40 OrElse image(0) <> &H4D OrElse image(1) <> &H5A Then Return
+
+    Dim pe = BitConverter.ToInt32(image, &H3C)
+    If pe <= 0 OrElse pe + 24 + 70 > image.Length Then Return
+    If image(pe) <> &H50 OrElse image(pe + 1) <> &H45 Then Return
+
+    Dim subsystem = pe + 24 + 68
+    If image(subsystem) = 3 Then image(subsystem) = 2   ' IMAGE_SUBSYSTEM_WINDOWS_CUI -> IMAGE_SUBSYSTEM_WINDOWS_GUI
+
+  End Sub
+
   ''' <summary>The apphost (launcher) template that ships with the .NET SDK, or Nothing when it can't be found.</summary>
   Private Shared Function FindAppHostTemplate() As String
 
@@ -451,7 +562,7 @@ Public Class QuickVBWorkspace
   End Function
 
   ''' <summary>Writes a launcher .exe that starts <paramref name="dllName"/> (next to it) on the installed .NET runtime.</summary>
-  Private Shared Sub WriteAppHost(exePath As String, dllName As String)
+  Private Shared Sub WriteAppHost(exePath As String, dllName As String, Optional windowsProgram As Boolean = False)
 
     Dim template = FindAppHostTemplate()
     If template Is Nothing Then Throw New FileNotFoundException("The .NET apphost template was not found (is the .NET SDK installed?).")
@@ -464,6 +575,9 @@ Public Class QuickVBWorkspace
     Dim name = System.Text.Encoding.UTF8.GetBytes(dllName)
     Array.Clear(data, at, Math.Max(placeholder.Length, name.Length + 1))
     Array.Copy(name, 0, data, at, name.Length)
+
+    ' a program with a window of its own has no console: the launcher is a Windows (GUI) program
+    If windowsProgram Then SetWindowsSubsystem(data)
 
     File.WriteAllBytes(exePath, data)
 
@@ -497,7 +611,7 @@ Public Class QuickVBWorkspace
     Next
     If includeDebugSymbols Then File.Copy(built & ".pdb", IO.Path.Combine(folder, baseName & ".pdb"), True)
 
-    WriteAppHost(IO.Path.Combine(folder, baseName & ExecutableSuffix), baseName & ".dll")
+    WriteAppHost(IO.Path.Combine(folder, baseName & ExecutableSuffix), baseName & ".dll", Me._windowed)
 
     Return diagnostics
 

@@ -72,6 +72,7 @@ Public Module AppFolders
     Dim folder = _processWorkFolder
     If folder Is Nothing Then Return
     _processWorkFolder = Nothing
+    QuickVBWorkspace.StopWindowedProgram()   ' a program still showing its window has files in there
     TryDelete(folder)
   End Sub
 
