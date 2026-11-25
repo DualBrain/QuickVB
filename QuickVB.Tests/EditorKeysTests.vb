@@ -382,6 +382,32 @@ Public Class EditorKeysTests
   End Sub
 
   <Fact>
+  Public Sub EnterAfterABlockHeaderWritesItsEnd()
+    Dim s As New Session("")
+
+    s.Console.QueueText("module program")
+    s.Press(VirtualKey.VK_RETURN, character:=Chr(13))
+
+    Dim lines = s.Ui.EditorView.Buffer.Lines.Select(Function(l) l.Text).ToList()
+    Assert.Contains("Module program", lines(0), StringComparison.OrdinalIgnoreCase)
+    Assert.Equal("    ", lines(1))                    ' the body, one tab stop in
+    Assert.Equal("End Module", lines(2))
+    Assert.Equal(1, s.Ui.EditorView.CursorRow)
+    Assert.Equal(4, s.Ui.EditorView.CursorColumn)
+  End Sub
+
+  <Fact>
+  Public Sub EnterInTheMiddleOfAHeaderDoesNotWriteAnEnd()
+    Dim s As New Session("")
+
+    s.Console.QueueText("module program")
+    s.Press(VirtualKey.VK_LEFT)
+    s.Press(VirtualKey.VK_RETURN, character:=Chr(13))
+
+    Assert.DoesNotContain("End Module", s.Ui.EditorView.Buffer.Text)
+  End Sub
+
+  <Fact>
   Public Sub TheImportGoesBelowTheOptionAndImportsLinesThereAlready()
     Dim s As New Session("Option Explicit On" & vbLf & "Imports System" & vbLf & vbLf & "Module M" & vbLf & "  Sub Main()" & vbLf & "    LOCATE(1, 1)" & vbLf & "  End Sub" & vbLf & "End Module")
 

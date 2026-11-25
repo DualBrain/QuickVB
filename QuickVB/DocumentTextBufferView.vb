@@ -52,6 +52,28 @@ Public Class DocumentTextBufferView
 
   End Sub
 
+  ' Enter after the first line of a block that has no end yet: the end is written (the cursor goes between the two lines)
+  Protected Overrides Sub OnLineEntered(row As Integer)
+
+    If Not Me.HasDocument OrElse Me.IsReadOnly Then Return
+    If row < 0 OrElse row + 1 >= Me.Buffer.Lines.Count Then Return
+
+    ' Enter in the middle of a line moves text to the new one: not the end of a header
+    If Me.Buffer.Lines(row + 1).Text.Trim().Length > 0 Then Return
+
+    Dim closing = EndConstruct.MissingEnd(Me.Buffer.Text, row)
+    If closing Is Nothing Then Return
+
+    Dim header = Me.Buffer.Lines(row).Text
+    Dim indent = header.Length - header.TrimStart(" "c).Length
+
+    Me.Buffer.RemoveText(row + 1, 0, Me.Buffer.Lines(row + 1).Text.Length)
+    Me.Buffer.InsertText(row + 1, 0, New String(" "c, indent + Me.TabStops))
+    Me.Buffer.InsertLine(row + 2, New String(" "c, indent) & closing)
+    Me.MoveCursor(row + 1, indent + Me.TabStops)
+
+  End Sub
+
   Dim _completionList As CompletionList = Nothing
 
   Public Sub MaybeTriggerCompletionList(triggerChar As Char?)

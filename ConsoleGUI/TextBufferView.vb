@@ -1402,6 +1402,7 @@ Namespace ConsoleGUI
           Dim truncatedText = Me.Buffer.TruncateText(Me.CursorRow, Me.CursorColumn)
           Me.Buffer.InsertLine(Me.CursorRow + 1, New String(" "c, padding) & truncatedText)
           Me.MoveCursor(Me.CursorRow + 1, padding)
+          Me.OnLineEntered(Me.CursorRow - 1)
 
         Case Else
 
@@ -1415,6 +1416,10 @@ Namespace ConsoleGUI
 
       End Select
 
+    End Sub
+
+    ''' <summary>Called after Enter has split a line: <paramref name="row"/> is the line that was ended, the cursor is on the new one.</summary>
+    Protected Overridable Sub OnLineEntered(row As Integer)
     End Sub
 
     Public Sub CharacterEdit(e As KeyEvent, screen As Screen)
