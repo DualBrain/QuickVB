@@ -335,4 +335,47 @@ Public Class EditorKeysTests
     Assert.DoesNotContain("Diagnostics", s.Console.GetText())
   End Sub
 
+  Private Shared Sub WaitFor(s As Session, condition As Func(Of Boolean))
+    Dim limit = Date.UtcNow.AddSeconds(30)
+    Do
+      s.Run()
+      If condition() Then Return
+      If Date.UtcNow > limit Then Throw New TimeoutException(s.Console.GetText())
+      Threading.Thread.Sleep(50)
+    Loop
+  End Sub
+
+  <Fact>
+  Public Sub UsingAQuickBasicStatementAddsItsImport()
+    Dim s As New Session("Module M" & vbLf & "  Sub Main()" & vbLf & "    CLS()" & vbLf & "  End Sub" & vbLf & "End Module")
+
+    WaitFor(s, Function() s.Ui.EditorView.Buffer.Text.Contains("Imports QB.Video"))
+
+    Dim lines = s.Ui.EditorView.Buffer.Lines.Select(Function(l) l.Text).ToList()
+    Assert.Equal("Imports QB.Video", lines(0))
+    Assert.Equal("Module M", lines(1))
+    Assert.Contains("Added Imports QB.Video", s.Console.GetText())
+  End Sub
+
+  <Fact>
+  Public Sub TheImportGoesBelowTheOptionAndImportsLinesThereAlready()
+    Dim s As New Session("Option Explicit On" & vbLf & "Imports System" & vbLf & vbLf & "Module M" & vbLf & "  Sub Main()" & vbLf & "    LOCATE(1, 1)" & vbLf & "  End Sub" & vbLf & "End Module")
+
+    WaitFor(s, Function() s.Ui.EditorView.Buffer.Text.Contains("Imports QB.Video"))
+
+    Dim lines = s.Ui.EditorView.Buffer.Lines.Select(Function(l) l.Text).ToList()
+    Assert.Equal("Imports System", lines(1))
+    Assert.Equal("Imports QB.Video", lines(2))
+  End Sub
+
+  <Fact>
+  Public Sub ARemovedImportIsNotAddedAgainUntilTheStatementIsUsedAgain()
+    Dim s As New Session("Module M" & vbLf & "  Sub Main()" & vbLf & "  End Sub" & vbLf & "End Module")
+    s.Run()
+    Threading.Thread.Sleep(500)
+    s.Run()
+
+    Assert.DoesNotContain("Imports QB", s.Ui.EditorView.Buffer.Text)
+  End Sub
+
 End Class

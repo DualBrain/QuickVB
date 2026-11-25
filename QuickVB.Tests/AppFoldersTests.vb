@@ -98,7 +98,7 @@ Public Class AppFoldersTests
 
     Dim built = Path.Combine(AppFolders.ProcessWorkFolder, "bin", "Demo.dll")
     Assert.True(File.Exists(built))
-    Assert.True(File.Exists(Path.Combine(AppFolders.ProcessWorkFolder, "bin", "QuickBasic.dll")))
+    Assert.False(File.Exists(Path.Combine(AppFolders.ProcessWorkFolder, "bin", "QB.Compatibility.dll")))   ' it uses nothing of the libraries
     Assert.False(built.StartsWith(AppContext.BaseDirectory, StringComparison.OrdinalIgnoreCase))
   End Sub
 

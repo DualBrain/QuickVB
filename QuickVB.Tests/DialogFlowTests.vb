@@ -768,7 +768,7 @@ Public Class DialogFlowTests
     Assert.True(File.Exists(target & QuickVBWorkspace.ExecutableSuffix))
     Assert.True(File.Exists(target & ".dll"))
     Assert.True(File.Exists(target & ".runtimeconfig.json"))
-    Assert.True(File.Exists(Path.Combine(Me._root, "QuickBasic.dll")))
+    Assert.False(File.Exists(Path.Combine(Me._root, "QB.Compatibility.dll")))   ' it uses nothing of the libraries
     Assert.False(File.Exists(target & ".pdb"))                      ' no debug code asked for
 
     Dim info As New ProcessStartInfo(target & QuickVBWorkspace.ExecutableSuffix) With {.RedirectStandardOutput = True, .UseShellExecute = False, .CreateNoWindow = True}
