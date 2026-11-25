@@ -190,9 +190,13 @@ Public Class QuickVBWorkspace
   Public Property MissingQbImports As Dictionary(Of String, List(Of String)) = New Dictionary(Of String, List(Of String))()
 
   Private Sub NoteMissingImports(compilation As Compilation)
+  ''' <summary>The names the last background compile found written with other casing than they are declared with (see <see cref="Casing.NameFixes"/>), by file path.</summary>
+  Public Property NameCasingFixes As Dictionary(Of String, List(Of Casing.NameFix)) = New Dictionary(Of String, List(Of Casing.NameFix))()
+
     Try
       Me.MissingQbImports = QBLibrary.MissingImports(compilation)
     Catch ex As Exception When TypeOf ex Is InvalidOperationException OrElse TypeOf ex Is ArgumentException
+      Me.NameCasingFixes = Casing.NameFixes(compilation)
       ' a compilation that cannot be asked: nothing is added
     End Try
   End Sub

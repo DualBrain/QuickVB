@@ -369,6 +369,19 @@ Public Class EditorKeysTests
   End Sub
 
   <Fact>
+  Public Sub ALowerCaseProgramIsWrittenWithTheCasingOfQuickBasic()
+    Dim s As New Session("module program" & vbLf & "sub Main" & vbLf & "print(""hi"")" & vbLf & "end sub" & vbLf & "end module")
+
+    WaitFor(s, Function() s.Ui.EditorView.Buffer.Text.Contains("PRINT(") AndAlso s.Ui.EditorView.Buffer.Text.Contains("Imports QB.Video"))
+
+    Dim text = s.Ui.EditorView.Buffer.Text
+    Assert.Contains("Module program", text)
+    Assert.Contains("Sub Main", text)
+    Assert.Contains("End Sub", text)
+    Assert.Contains("End Module", text)
+  End Sub
+
+  <Fact>
   Public Sub TheImportGoesBelowTheOptionAndImportsLinesThereAlready()
     Dim s As New Session("Option Explicit On" & vbLf & "Imports System" & vbLf & vbLf & "Module M" & vbLf & "  Sub Main()" & vbLf & "    LOCATE(1, 1)" & vbLf & "  End Sub" & vbLf & "End Module")
 

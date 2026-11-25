@@ -1209,6 +1209,13 @@ Partial Public Class MyScreen
   Private _showScrollBars As Boolean = True
   Private _tabStops As Integer = 4
 
+  ''' <summary>The spaces of one level of indentation: the Tab Stops of the Display dialog (what the formatter indents with, too).</summary>
+  Public ReadOnly Property IndentSize As Integer
+    Get
+      Return Me._tabStops
+    End Get
+  End Property
+
   ' Where the Options > Display choices are kept between runs (Nothing: not saved, which is what the tests want).
   Public Property SettingsPath As String
 
@@ -1243,7 +1250,7 @@ Partial Public Class MyScreen
           Case "syntaxchecking" : Boolean.TryParse(value, Me._syntaxChecking)
           Case "fullmenus" : Boolean.TryParse(value, Me._fullMenus)
           Case "rightmouse" : If value = "help" OrElse value = "cursor" Then Me._rightMouse = value
-          Case "tabstops" : If Integer.TryParse(value, number) AndAlso number >= 1 AndAlso number <= 8 Then Me._tabStops = number
+          Case "tabstops" : If Integer.TryParse(value, number) AndAlso number >= DisplayDialog.MinTabStops AndAlso number <= DisplayDialog.MaxTabStops Then Me._tabStops = number
         End Select
       Next
     Catch ex As System.IO.IOException
@@ -1787,6 +1794,7 @@ Partial Public Class MyScreen
           ' (and nothing is said about a program that has not been started: an empty editor is not an error)
           Me.UpdateDiagnostics(If(Me._syntaxChecking AndAlso Not Me.IsProgramBlank(), diagnostics, Nothing))
           Me.AddMissingQbImports()
+          Me.ApplyNameCasing()
         End Sub)
   End Sub
 

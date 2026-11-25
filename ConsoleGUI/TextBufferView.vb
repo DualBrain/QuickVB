@@ -1374,7 +1374,7 @@ Namespace ConsoleGUI
             Dim count As Integer
 
             If Me.CursorColumn <= preSpace OrElse lineText.Trim().Length = 0 Then
-              count = ((Me.CursorColumn - 1) Mod 4) + 1
+              count = ((Me.CursorColumn - 1) Mod Me.TabStops) + 1
             Else
               count = 1
             End If

@@ -426,6 +426,31 @@ Public Class EditorTests
     Assert.Equal("  x", s.Text)
   End Sub
 
+  <Fact>
+  Public Sub TabStopsOfTwoIndentByTwo()
+    Dim s = Editor("a" & vbCrLf & "b")
+    s.View.TabStops = 2
+
+    s.Console.QueueKey(VirtualKey.VK_DOWN, state:=Shift)
+    s.Console.QueueKey(VirtualKey.VK_DOWN, state:=Shift)
+    s.Console.QueueKey(VirtualKey.VK_TAB, ChrW(9))
+    s.Run()
+
+    Assert.Equal("  a" & vbCrLf & "  b", s.Text)
+  End Sub
+
+  <Fact>
+  Public Sub BackspaceInTheIndentationGoesBackToThePreviousTabStop()
+    Dim s = Editor("      x")
+    s.View.TabStops = 2
+    s.View.MoveCursor(0, 3)
+
+    s.Console.QueueKey(VirtualKey.VK_BACK, ChrW(8))
+    s.Run()
+
+    Assert.Equal("     x", s.Text)   ' column 3 to column 2: one space
+  End Sub
+
   ' ---- mouse
 
   <Fact>

@@ -57,6 +57,46 @@ Partial Public Class MyScreen
 
   End Sub
 
+  ''' <summary>Writes the names of the program the way they are declared (print becomes PRINT), as QuickBASIC did when a line was entered.</summary>
+  Private Sub ApplyNameCasing()
+
+    Dim workspace = App.TheWorkspace
+    Dim fixes = workspace.NameCasingFixes
+    If fixes Is Nothing OrElse fixes.Count = 0 Then Return
+
+    workspace.NameCasingFixes = New Dictionary(Of String, List(Of Casing.NameFix))()
+
+    For Each slot In Me.EditorSlots()
+
+      Dim view = slot.Item1
+      Dim file = slot.Item2
+      Dim list As List(Of Casing.NameFix) = Nothing
+      If file Is Nothing OrElse Not fixes.TryGetValue(file.Name, list) Then Continue For
+
+      Dim buffer = TryCast(view.Buffer, DocumentTextBuffer)
+      If buffer Is Nothing OrElse view.IsReadOnly Then Continue For
+
+      Dim changed = False
+
+      view.Edit(Sub()
+                  For Each entry In list
+                    ' only where the text is still what was looked at (the line may have been edited since)
+                    If entry.Line >= buffer.Lines.Count Then Continue For
+                    Dim text = buffer.Lines(entry.Line).Text
+                    If entry.Column + entry.Old.Length > text.Length Then Continue For
+                    If Not String.Equals(text.Substring(entry.Column, entry.Old.Length), entry.Old, StringComparison.Ordinal) Then Continue For
+                    buffer.RemoveText(entry.Line, entry.Column, entry.Old.Length)
+                    buffer.InsertText(entry.Line, entry.Column, entry.[New])
+                    changed = True
+                  Next
+                End Sub)
+
+      If changed Then Me.OnCharacterChanged(buffer)
+
+    Next
+
+  End Sub
+
   ' the row of the file's Imports QB.Video line, or -1
   Private Shared Function VideoImportRow(buffer As TextBuffer) As Integer
 

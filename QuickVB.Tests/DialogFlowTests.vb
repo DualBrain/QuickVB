@@ -26,7 +26,8 @@ Public Class DialogFlowTests
 
   ' ---- helpers
 
-  Private Const Program As String = "Module Untitled" & vbCrLf &
+  Private Const Program As String = "Imports QB.Video" & vbCrLf &
+                                    "Module Untitled" & vbCrLf &
                                     "  Sub Main()" & vbCrLf &
                                     "    Dim total As Integer = 1" & vbCrLf &
                                     "    PRINT(total)" & vbCrLf &
@@ -312,8 +313,8 @@ Public Class DialogFlowTests
     s.Type("total")
     s.Press(VirtualKey.VK_RETURN)
 
-    Assert.Equal(2, s.Ui.EditorView.CursorRow)
-    Assert.Equal(s.Ui.Editor.Lines(2).Text.IndexOf("total"), s.Ui.EditorView.CursorColumn)
+    Assert.Equal(3, s.Ui.EditorView.CursorRow)
+    Assert.Equal(s.Ui.Editor.Lines(3).Text.IndexOf("total"), s.Ui.EditorView.CursorColumn)
     Assert.Null(s.Ui.PopupControl)
     ' the match is highlighted (black on gray) in the editor
     Dim row = s.Console.GetText().Split(ControlChars.Lf).ToList().FindIndex(Function(l) l.Contains("Dim total As Integer"))
@@ -329,20 +330,20 @@ Public Class DialogFlowTests
     s.Menu("s", "f")
     s.Type("total")
     s.Press(VirtualKey.VK_RETURN)
-    Assert.Equal(2, s.Ui.EditorView.CursorRow)
+    Assert.Equal(3, s.Ui.EditorView.CursorRow)
 
     s.Press(VirtualKey.VK_F3)
-    Assert.Equal(3, s.Ui.EditorView.CursorRow)               ' PRINT(total)
+    Assert.Equal(4, s.Ui.EditorView.CursorRow)               ' PRINT(total)
 
     s.Press(VirtualKey.VK_F3)
-    Assert.Equal(2, s.Ui.EditorView.CursorRow)               ' wrapped
+    Assert.Equal(3, s.Ui.EditorView.CursorRow)               ' wrapped
   End Sub
 
   <Fact>
   Public Sub FindStartsWithTheWordUnderTheCursor()
     Dim s As New Session()
-    Dim inside = s.Ui.Editor.Lines(2).Text.IndexOf("total") + 2
-    s.Ui.Post(Sub() s.Ui.EditorView.MoveCursor(2, inside))      ' inside "total"
+    Dim inside = s.Ui.Editor.Lines(3).Text.IndexOf("total") + 2
+    s.Ui.Post(Sub() s.Ui.EditorView.MoveCursor(3, inside))      ' inside "total"
     s.Run()
 
     s.Menu("s", "f")
@@ -647,8 +648,8 @@ Public Class DialogFlowTests
   <Fact>
   Public Sub AddWatchStartsWithTheWordUnderTheCursor()
     Dim s As New Session()
-    Dim inside = s.Ui.Editor.Lines(2).Text.IndexOf("total") + 2
-    s.Ui.Post(Sub() s.Ui.EditorView.MoveCursor(2, inside))
+    Dim inside = s.Ui.Editor.Lines(3).Text.IndexOf("total") + 2
+    s.Ui.Post(Sub() s.Ui.EditorView.MoveCursor(3, inside))
     s.Run()
 
     s.Menu("d", "a")

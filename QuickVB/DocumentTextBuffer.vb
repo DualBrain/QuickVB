@@ -122,7 +122,17 @@ Public Class DocumentTextBuffer
 
     Dim oldSolution = workspace.CurrentSolution
     Dim oldDocument = oldSolution.GetDocument(Me.DocumentId)
-    Dim formattedDocument = Formatter.FormatAsync(oldDocument).Result
+    Dim size = DirectCast(MyScreen.GetScreen(), MyScreen).IndentSize
+    Dim options = oldDocument.GetOptionsAsync().Result.
+                  WithChangedOption(FormattingOptions.IndentationSize, LanguageNames.VisualBasic, size).
+                  WithChangedOption(FormattingOptions.TabSize, LanguageNames.VisualBasic, size).
+                  WithChangedOption(FormattingOptions.UseTabs, LanguageNames.VisualBasic, False)
+    Dim formattedDocument = Formatter.FormatAsync(oldDocument, options).Result
+
+    ' keywords in their proper case (module -> Module)
+    Dim keywordChanges = Casing.KeywordChanges(formattedDocument.GetSyntaxRootAsync().Result)
+    If keywordChanges.Count > 0 Then formattedDocument = formattedDocument.WithText(formattedDocument.GetTextAsync().Result.WithChanges(keywordChanges))
+
     Dim newSolution = formattedDocument.Project.Solution
 
     workspace.TryApplyChanges(newSolution)

@@ -214,8 +214,9 @@ Public Module QBLibrary
         If existing.Contains(target) OrElse needed.Contains(target) Then Continue For
 
         ' something the program declares (a variable, a procedure of its own) is not a QuickBASIC statement
-        If Not drawing AndAlso info.Symbol IsNot Nothing AndAlso Not IsImplicitVariable(info.Symbol) Then Continue For
-        If info.CandidateSymbols.Any(Function(s) s.ContainingAssembly Is Nothing OrElse s.ContainingAssembly.Identity.Name <> "Microsoft.VisualBasic") AndAlso info.Symbol Is Nothing Then Continue For
+        ' (Print, Width, ... of the Visual Basic runtime are not the program's own either: PRINT is QuickBASIC's)
+        If Not drawing AndAlso info.Symbol IsNot Nothing AndAlso Not IsImplicitVariable(info.Symbol) AndAlso Not IsRuntimeSymbol(info.Symbol) Then Continue For
+        If info.CandidateSymbols.Any(Function(s) Not IsRuntimeSymbol(s)) AndAlso info.Symbol Is Nothing Then Continue For
 
         needed.Add(target)
 
@@ -253,6 +254,10 @@ Public Module QBLibrary
       Return False
     End Try
 
+  End Function
+
+  Private Function IsRuntimeSymbol(symbol As ISymbol) As Boolean
+    Return symbol.ContainingAssembly IsNot Nothing AndAlso symbol.ContainingAssembly.Identity.Name.StartsWith("Microsoft.VisualBasic", StringComparison.Ordinal)
   End Function
 
   Private Function IsLibrarySymbol(symbol As ISymbol) As Boolean
