@@ -63,7 +63,7 @@ The original authors' wish list, and where it stands:
 * ~~Opening/saving of arbitrary files and projects~~ (done; `.bas`, `.vb`, `.vbproj`, `.sln` and `.slnx`)
 * ~~Support for navigating around large projects and adding/removing code files~~ (done; see *Programs of several files*)
 * General perf improvements when working on multi-file programs like the QuickVB solution itself
-* QuickBasic compatibility library, to ease porting of classic programs like GORILLA.BAS (WIP)
+* ~~QuickBasic compatibility library, to ease porting of classic programs like GORILLA.BAS~~ (done: [QB.Compatibility](https://github.com/DualBrain/QB.Compatibility))
 
 And this GitHub project's own list:
 
@@ -77,8 +77,8 @@ And this GitHub project's own list:
 * ~~Enable "Roslyn" by default~~ (done; *Options > Disable Roslyn* switches it off)
 * ~~Remove "self-editing".~~ (done)
 * Debug > Trace On, History On (Shift+F8 / Shift+F10) and Set Next Statement
-* Replace the QuickBasic library included here with the QB.Compatibility NuGet package
-* Actually port GORILLA.BAS as an included sample (follows the library change above)
+* ~~Replace the QuickBasic library included here with the QB.Compatibility NuGet package~~ (done; see *QuickBASIC statements*)
+* Actually port GORILLA.BAS as an included sample (it was written for the old library and is out of the solution until ported)
 * Install as a dotnet tool (follows the library change above)
 
 ## What QuickVB does today
@@ -101,13 +101,22 @@ Each of these is described below.
 * [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) (Windows or Linux) - build with `dotnet build QuickVB.sln`, run with `dotnet run --project QuickVB`.
   Programs written inside QuickVB are compiled against the .NET 10 reference assemblies and run with the `dotnet` host. Make EXE File writes a launcher for the machine you are on (`.exe` on Windows, an executable file on Linux).
 
+## QuickBASIC statements
+
+The QuickBASIC and QBasic statements and functions (`PRINT`, `LOCATE`, `CLS`, `OPEN`, `INKEY$`, `SOUND`, `PLAY`, `SCREEN`, `PSET`, ...) come from the [QB.Compatibility](https://github.com/DualBrain/QB.Compatibility) library (version 0.1.0-preview.1), which QuickVB carries inside itself. Nothing is added to a program until it asks for it: when the code calls a QuickBASIC statement that nothing declares, QuickVB puts the line that imports it at the top of the file (`Imports QB.Video`, or `QB.Graphics` for the drawing statements) and says so on the status line. That line is ordinary code: it stays until you take it out, and QuickVB never takes it out for you.
+
+* A program that doesn't import a `QB` namespace is compiled against nothing but .NET, and nothing extra is written next to it.
+* A program that imports `QB.Video` (and the other text namespaces) gets `QB.Compatibility.dll` next to it when it is run or made into an EXE.
+* A program that imports `QB.Graphics` also gets `QB.Compatibility.Sdl.dll`, SDL2-CS and the native SDL2 library for the platform QuickVB was built for, and draws in an SDL2 window.
+* Under the debugger a small `QuickVB.Runtime.dll` is added to the program as well.
+
 ## A single file to copy (xcopy deployment)
 
 ```
 ./build/publish.ps1 -Runtime win-x64,linux-x64 -Zip
 ```
 
-makes `artifacts/<runtime>/quickvb.exe` (or `quickvb`): one file of about 20 MB (7 MB zipped) that can be copied anywhere and run. Nothing else is needed beside it, and nothing is written next to it (see below; add a `quickvb.portable` file next to it to keep settings with it). The .NET 10 runtime has to be installed, because QuickVB runs the programs you write with it, and the .NET SDK is needed for Make EXE File (it takes the launcher template from the SDK).
+makes `artifacts/<runtime>/quickvb.exe` (or `quickvb`): one file of about 22 MB on Windows and 29 MB on Linux (the native SDL2 library for graphics is part of it; about 8 MB zipped) that can be copied anywhere and run. Nothing else is needed beside it, and nothing is written next to it (see below; add a `quickvb.portable` file next to it to keep settings with it). The .NET 10 runtime has to be installed, because QuickVB runs the programs you write with it, and the .NET SDK is needed for Make EXE File (it takes the launcher template from the SDK).
 
 Self-contained and trimmed builds were measured (win-x64): framework-dependent single file 20.6 MB; self-contained and compressed 44.9 MB; self-contained, compressed and partly trimmed 21.0 MB. Almost all of the size is Roslyn (the compiler, 12 MB) and the .NET reference assemblies programs are compiled against (6 MB), which can't be trimmed because Roslyn finds its parts by reflection. A trimmed self-contained file is no smaller than the framework-dependent one, and a trimmed runtime could not run the programs you write, so the framework-dependent file is the one to ship. Native AOT is not possible for the same reason.
 
