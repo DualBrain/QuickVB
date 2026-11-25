@@ -52,7 +52,7 @@ Public Class CompletionList
 
     Dim replaceSpan = token.Span
 
-    Dim symbols = Recommender.GetRecommendedSymbolsAtPosition(document.GetSemanticModelAsync.Result, replaceSpan.Start, document.Project.Solution.Workspace)
+    Dim symbols = Recommender.GetRecommendedSymbolsAtPositionAsync(document, replaceSpan.Start).Result
 
     If Not symbols.Any Then Return Nothing
 

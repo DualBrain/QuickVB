@@ -21,6 +21,21 @@ Public Class DocumentTextBufferView
     End Set
   End Property
 
+  ' There is nothing to edit until the first document has been loaded (keys and clicks can arrive before that at start-up).
+  Private ReadOnly Property HasDocument As Boolean
+    Get
+      Return Me.Buffer IsNot Nothing AndAlso Me.Buffer.Document IsNot Nothing
+    End Get
+  End Property
+
+  Public Overrides Sub OnBeforeKeyDown(sender As Object, e As KeyEvent)
+    If Me.HasDocument Then MyBase.OnBeforeKeyDown(sender, e)
+  End Sub
+
+  Public Overrides Sub OnMouseDown(sender As Object, e As MouseEvent)
+    If Me.HasDocument Then MyBase.OnMouseDown(sender, e)
+  End Sub
+
   Sub LoadDocument(projectName As String, documentName As String)
 
     Dim workspace = App.TheWorkspace
@@ -46,6 +61,7 @@ Public Class DocumentTextBufferView
     If CompletionList.CheckIfActive(Me._completionList) Then Me._completionList.Deactivate(theScreen)
 
     Dim document = Me.Buffer.Document
+    If document Is Nothing Then Exit Sub
 
     Me._completionList = CompletionList.TryCreate(document, Me, theScreen, triggerChar)
 
@@ -71,6 +87,8 @@ Public Class DocumentTextBufferView
     End If
 
     Dim document = Me.Buffer.Document
+    If document Is Nothing Then Exit Sub
+
     Dim position = document.GetTextAsync.Result.GetPositionFromLineAndColumn(Me.CursorRow, Me.CursorColumn)
     Dim span = New TextSpan(position, 0)
 

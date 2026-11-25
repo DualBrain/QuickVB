@@ -16,6 +16,9 @@ Public Class DocumentTextBuffer
 
   Public Property DocumentId As DocumentId
 
+  ' The colour behind the coloured text (Options > Display changes it).
+  Public Property EditorBackground As ConsoleColor = ConsoleColor.DarkBlue
+
   Public ReadOnly Property Document As Document
     Get
       Return App.TheWorkspace?.CurrentSolution?.GetDocument(Me.DocumentId)
@@ -26,7 +29,8 @@ Public Class DocumentTextBuffer
 
     MyScreen.GetScreen.AssertOnUIThread()
 
-    Dim workspace = App.TheWorkspace
+    ' The document may be gone (a different program was opened while a background compile was running).
+    If Me.Document Is Nothing Then Exit Sub
 
     Dim text = Me.Document.GetTextAsync(cancel).Result
     Dim rootNode = Me.Document.GetSyntaxRootAsync(cancel).Result
@@ -44,34 +48,19 @@ Public Class DocumentTextBuffer
 
       Dim color As ConsoleColor
 
-      If Me.Document.GetSyntaxRootAsync.Result.Language = LanguageNames.VisualBasic Then
-        Select Case span.ClassificationType
-          Case ClassificationTypeNames.Keyword
-            color = ConsoleColor.Cyan
-          Case ClassificationTypeNames.Comment
-            color = ConsoleColor.Green
-          Case ClassificationTypeNames.NumericLiteral, ClassificationTypeNames.StringLiteral, ClassificationTypeNames.VerbatimStringLiteral
-            color = ConsoleColor.Red
-          Case ClassificationTypeNames.ClassName, ClassificationTypeNames.ModuleName, ClassificationTypeNames.StructName, ClassificationTypeNames.DelegateName,
-               ClassificationTypeNames.EnumName, ClassificationTypeNames.InterfaceName, ClassificationTypeNames.TypeParameterName
-            color = ConsoleColor.DarkCyan
-          Case Else
-            Continue For
-        End Select
-      Else
-        Select Case span.ClassificationType
-          Case ClassificationTypeNames.Keyword
-            color = ConsoleColor.White
-          Case ClassificationTypeNames.Comment
-            color = ConsoleColor.DarkGreen
-          Case ClassificationTypeNames.NumericLiteral, ClassificationTypeNames.StringLiteral, ClassificationTypeNames.VerbatimStringLiteral
-            color = ConsoleColor.DarkRed
-          Case ClassificationTypeNames.Identifier
-            color = ConsoleColor.Green
-          Case Else
-            Continue For
-        End Select
-      End If
+      Select Case span.ClassificationType
+        Case ClassificationTypeNames.Keyword
+          color = ConsoleColor.Cyan
+        Case ClassificationTypeNames.Comment
+          color = ConsoleColor.Green
+        Case ClassificationTypeNames.NumericLiteral, ClassificationTypeNames.StringLiteral, ClassificationTypeNames.VerbatimStringLiteral
+          color = ConsoleColor.Red
+        Case ClassificationTypeNames.ClassName, ClassificationTypeNames.ModuleName, ClassificationTypeNames.StructName, ClassificationTypeNames.DelegateName,
+             ClassificationTypeNames.EnumName, ClassificationTypeNames.InterfaceName, ClassificationTypeNames.TypeParameterName
+          color = ConsoleColor.DarkCyan
+        Case Else
+          Continue For
+      End Select
 
       ' TODO: Handle multi-line spans:
 
@@ -80,7 +69,7 @@ Public Class DocumentTextBuffer
 
       Dim colorSpan As New ColorSpan With {.Start = spanStart.Character,
                                            .Length = spanEnd.Character - spanStart.Character,
-                                           .BackgroundColor = ConsoleColor.DarkBlue,
+                                           .BackgroundColor = Me.EditorBackground,
                                            .ForegroundColor = color}
 
       Me.Lines(spanStart.Line).ColorSpans.Add(colorSpan)

@@ -55,41 +55,4 @@ Module Utility
 
   End Function
 
-  Public Sub CopyDirectory(source As DirectoryInfo, target As DirectoryInfo, Optional excludeFolderFilters As String() = Nothing)
-
-    If source.FullName.ToLower() = target.FullName.ToLower() Then Return
-
-    If Not Directory.Exists(target.FullName) Then
-      Directory.CreateDirectory(target.FullName)
-    End If
-
-    For Each fi In source.GetFiles()
-      fi.CopyTo(Path.Combine(target.FullName, fi.Name), True)
-    Next
-
-    For Each diSourceSubDir In source.GetDirectories()
-
-      If excludeFolderFilters IsNot Nothing Then
-
-        Dim filtered As Boolean = False
-
-        For Each ExcludeFolderFilter In excludeFolderFilters
-          If String.Equals(diSourceSubDir.Name, ExcludeFolderFilter, StringComparison.InvariantCultureIgnoreCase) Then
-            filtered = True
-            Exit For
-          End If
-        Next
-
-        If filtered Then Continue For
-
-      End If
-
-      Dim nextTargetSubDir = target.CreateSubdirectory(diSourceSubDir.Name)
-
-      CopyDirectory(diSourceSubDir, nextTargetSubDir, excludeFolderFilters)
-
-    Next
-
-  End Sub
-
 End Module
