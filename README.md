@@ -103,7 +103,7 @@ Each of these is described below.
 
 ## QuickBASIC statements
 
-The QuickBASIC and QBasic statements and functions (`PRINT`, `LOCATE`, `CLS`, `OPEN`, `INKEY$`, `SOUND`, `PLAY`, `SCREEN`, `PSET`, ...) come from the [QB.Compatibility](https://github.com/DualBrain/QB.Compatibility) library (version 0.1.1), which QuickVB carries inside itself. Nothing is added to a program until it asks for it: when the code calls a QuickBASIC statement that nothing declares, QuickVB puts the line that imports it at the top of the file (`Imports QB.Video`, or `QB.Graphics` for the drawing statements) and says so on the status line. That line is ordinary code: it stays until you take it out, and QuickVB never takes it out for you.
+The QuickBASIC and QBasic statements and functions (`PRINT`, `LOCATE`, `CLS`, `OPEN`, `INKEY$`, `SOUND`, `PLAY`, `SCREEN`, `PSET`, ...) come from the [QB.Compatibility](https://github.com/DualBrain/QB.Compatibility) library (version 0.1.2), which QuickVB carries inside itself. Nothing is added to a program until it asks for it: when the code calls a QuickBASIC statement that nothing declares, QuickVB puts the line that imports it at the top of the file (`Imports QB.Video`, or `QB.Graphics` for the drawing statements) and says so on the status line. That line is ordinary code: it stays until you take it out, and QuickVB never takes it out for you.
 
 * A program that doesn't import a `QB` namespace is compiled against nothing but .NET, and nothing extra is written next to it.
 * A program that imports `QB.Video` (and the other text namespaces) gets `QB.Compatibility.dll` next to it when it is run or made into an EXE.

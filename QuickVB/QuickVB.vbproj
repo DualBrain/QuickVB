@@ -37,7 +37,7 @@
     sample programs (File > Samples). The packages are only a source for the files; nothing of them is referenced.
   -->
   <PropertyGroup>
-    <QbVersion>0.1.1</QbVersion>
+    <QbVersion>0.1.2</QbVersion>
     <SdlCsVersion>1.0.82</SdlCsVersion>
   </PropertyGroup>
 
