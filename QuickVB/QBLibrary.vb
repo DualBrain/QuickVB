@@ -98,15 +98,31 @@ Public Module QBLibrary
       If bytes IsNot Nothing Then File.WriteAllBytes(Path.Combine(folder, name & ".dll"), bytes)
     Next
 
-    ' SDL2 itself (the native library for the platform QuickVB was built for)
+    ' SDL2 itself: the native library of the platform QuickVB is running on
     If names.Contains(Sdl, StringComparer.OrdinalIgnoreCase) Then
-      For Each native In {"SDL2.dll", "libSDL2.so", "libSDL2.dylib"}
-        Dim bytes = Image("native/" & native)
-        If bytes IsNot Nothing Then File.WriteAllBytes(Path.Combine(folder, native), bytes)
-      Next
+      Dim native = NativeLibrary()
+      If native IsNot Nothing Then
+        Dim bytes = Image("native/" & native.Item1 & "/" & native.Item2)
+        If bytes IsNot Nothing Then File.WriteAllBytes(Path.Combine(folder, native.Item2), bytes)
+      End If
     End If
 
   End Sub
+
+  ''' <summary>
+  ''' The runtime identifier and file name of the SDL2 library QuickVB carries for this machine, or Nothing when it carries none
+  ''' (arm machines use the system's SDL2 when there is one).
+  ''' </summary>
+  Public Function NativeLibrary() As Tuple(Of String, String)
+
+    If System.Runtime.InteropServices.RuntimeInformation.OSArchitecture <> System.Runtime.InteropServices.Architecture.X64 Then Return Nothing
+
+    If OperatingSystem.IsWindows() Then Return Tuple.Create("win-x64", "SDL2.dll")
+    If OperatingSystem.IsMacOS() Then Return Tuple.Create("osx-x64", "libSDL2.dylib")
+    If OperatingSystem.IsLinux() Then Return Tuple.Create("linux-x64", "libSDL2.so")
+    Return Nothing
+
+  End Function
 
   ''' <summary>The files a program may have next to it that came from here (Make EXE File copies them with the program).</summary>
   Public Function FileNamesIn(folder As String) As IEnumerable(Of String)

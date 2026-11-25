@@ -31,21 +31,14 @@
   </ItemGroup>
 
   <!--
-    The libraries a program may use travel inside QuickVB itself, so a single-file QuickVB has everything to take them from: QB.Compatibility
-    (the QuickBASIC statements; a program gets it when it imports a QB namespace), QB.Compatibility.Sdl with SDL2 (graphics), and QuickVB.Runtime
-    (the part of the debugger that runs inside the program). The packages are only a source for the files; nothing of them is referenced.
-    SDL2's native library is embedded for the platform being built for (publish with -r <rid>; otherwise this machine's).
+    Everything a program may need travels inside QuickVB itself, so a single file (or one dotnet tool package) is all there is:
+    QB.Compatibility (the QuickBASIC statements; a program gets it when it imports a QB namespace), QB.Compatibility.Sdl with SDL2-CS and
+    the native SDL2 library of every platform (graphics), QuickVB.Runtime (the part of the debugger that runs inside the program) and the
+    sample programs (File > Samples). The packages are only a source for the files; nothing of them is referenced.
   -->
   <PropertyGroup>
     <QbVersion>0.1.1</QbVersion>
     <SdlCsVersion>1.0.82</SdlCsVersion>
-    <_SdlRid Condition="'$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</_SdlRid>
-    <_SdlRid Condition="'$(_SdlRid)' == '' and $([MSBuild]::IsOSPlatform('Windows'))">win-x64</_SdlRid>
-    <_SdlRid Condition="'$(_SdlRid)' == '' and $([MSBuild]::IsOSPlatform('OSX'))">osx-x64</_SdlRid>
-    <_SdlRid Condition="'$(_SdlRid)' == ''">linux-x64</_SdlRid>
-    <_SdlNative Condition="$(_SdlRid.StartsWith('win'))">SDL2.dll</_SdlNative>
-    <_SdlNative Condition="$(_SdlRid.StartsWith('osx'))">libSDL2.dylib</_SdlNative>
-    <_SdlNative Condition="$(_SdlRid.StartsWith('linux'))">libSDL2.so</_SdlNative>
   </PropertyGroup>
 
   <Target Name="EmbedLibraries" BeforeTargets="AssignTargetPaths" DependsOnTargets="ResolveReferences">
@@ -58,10 +51,18 @@
       <EmbeddedResource Include="$(_QbLib)QB.Compatibility.dll" LogicalName="QB.Compatibility.dll" />
       <EmbeddedResource Include="$(_QbSdlLib)QB.Compatibility.Sdl.dll" LogicalName="QB.Compatibility.Sdl.dll" />
       <EmbeddedResource Include="$(_SdlCsRoot)lib/netstandard2.0/SDL2-CS.dll" LogicalName="SDL2-CS.dll" />
-      <EmbeddedResource Include="$(_SdlCsRoot)runtimes/$(_SdlRid)/native/$(_SdlNative)" LogicalName="native/$(_SdlNative)" Condition="Exists('$(_SdlCsRoot)runtimes/$(_SdlRid)/native/$(_SdlNative)')" />
+      <EmbeddedResource Include="$(_SdlCsRoot)runtimes/win-x64/native/SDL2.dll" LogicalName="native/win-x64/SDL2.dll" />
+      <EmbeddedResource Include="$(_SdlCsRoot)runtimes/linux-x64/native/libSDL2.so" LogicalName="native/linux-x64/libSDL2.so" />
+      <EmbeddedResource Include="$(_SdlCsRoot)runtimes/osx-x64/native/libSDL2.dylib" LogicalName="native/osx-x64/libSDL2.dylib" />
       <EmbeddedResource Include="@(ReferenceCopyLocalPaths)" Condition="'%(Filename)%(Extension)' == 'QuickVB.Runtime.dll'" LogicalName="QuickVB.Runtime.dll" />
     </ItemGroup>
   </Target>
+
+  <!-- the sample programs are the ones in their own folders, so there is one copy of each -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\Nibbles\NIBBLES.vb" LogicalName="samples/NIBBLES.vb" />
+    <EmbeddedResource Include="..\Gorilla\GORILLA.vb" LogicalName="samples/GORILLA.vb" />
+  </ItemGroup>
 
   <!-- dotnet publish -r <rid> -p:PublishSingleFile=true (see build/publish.ps1): one file, nothing else to copy -->
   <PropertyGroup Condition="'$(PublishSingleFile)' == 'true'">

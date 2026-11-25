@@ -31,6 +31,22 @@ Public Class QBLibraryTests
   End Sub
 
   <Fact>
+  Public Sub TheNativeWindowLibraryOfEveryPlatformIsEmbedded()
+    Dim names = GetType(QBLibrary).Assembly.GetManifestResourceNames()
+    Assert.Contains("native/win-x64/SDL2.dll", names)
+    Assert.Contains("native/linux-x64/libSDL2.so", names)
+    Assert.Contains("native/osx-x64/libSDL2.dylib", names)
+  End Sub
+
+  <Fact>
+  Public Sub TheSamplesAreEmbedded()
+    Assert.Equal({"Nibbles", "Gorilla"}, SampleLibrary.All().Select(Function(s) s.Name).ToArray())
+    For Each sample In SampleLibrary.All()
+      Assert.Contains("Module Program", sample.Text())
+    Next
+  End Sub
+
+  <Fact>
   Public Sub TheEmbeddedCopiesAreTheLibrariesQuickVBUses()
     Assert.Equal("QB.Compatibility", Assembly.Load(QBLibrary.Image("QB.Compatibility.dll")).GetName().Name)
     Assert.NotNull(Assembly.Load(QBLibrary.Image("QuickVB.Runtime.dll")).GetType("QuickVB.Runtime.DebugHost"))
