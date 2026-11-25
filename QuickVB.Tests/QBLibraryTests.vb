@@ -138,6 +138,37 @@ Public Class QBLibraryTests
   End Sub
 
   <Fact>
+  Public Sub KeywordsAreWrittenInTheirProperCase()
+    Dim tree = Microsoft.CodeAnalysis.VisualBasic.VisualBasicSyntaxTree.ParseText("module program" & vbLf & "  sub Main()" & vbLf & "    dim x as integer = 1 'end sub" & vbLf & "  end sub" & vbLf & "end module")
+
+    Dim changed = tree.GetText().WithChanges(Casing.KeywordChanges(tree.GetRoot())).ToString()
+
+    Assert.Equal("Module program" & vbLf & "  Sub Main()" & vbLf & "    Dim x As Integer = 1 'end sub" & vbLf & "  End Sub" & vbLf & "End Module", changed)
+  End Sub
+
+  <Fact>
+  Public Sub ANameTakesTheCasingItWasDeclaredWith()
+    Dim built = Build("Imports QB.Video" & vbLf & "Module Demo" & vbLf & "  Sub Main()" & vbLf & "    Dim Total As Integer = 1" & vbLf & "    print(total)" & vbLf & "    cls()" & vbLf & "  End Sub" & vbLf & "End Module")
+
+    Dim fixes = Casing.NameFixes(built.Workspace.CurrentSolution.Projects.First().GetCompilationAsync().Result).Single().Value
+
+    Assert.Equal({"print>PRINT", "total>Total", "cls>CLS"}.OrderBy(Function(x) x), fixes.Select(Function(f) f.Old & ">" & f.[New]).OrderBy(Function(x) x))
+  End Sub
+
+  <Fact>
+  Public Sub AProgramThatDrawsWaitsForAKeyWhenItEnds()
+    Dim built = Build("Imports QB.Graphics" & vbLf & "Module Demo" & vbLf & "  Sub Main()" & vbLf & "    SCREEN(9)" & vbLf & "    PRINT(""hi"")" & vbLf & "  End Sub" & vbLf & "End Module")
+    Dim compilation = built.Workspace.CurrentSolution.Projects.First().GetCompilationAsync().Result
+
+    Dim changed = QuickVBWorkspace.WaitForKeyAtEnd(compilation)
+
+    Dim lines = changed.SyntaxTrees.Single().GetText().Lines
+    Assert.Equal(compilation.SyntaxTrees.Single().GetText().Lines.Count, lines.Count)   ' no line moved
+    Assert.Equal("    QB.Video.WaitForKeyAtExit = True : SCREEN(9)", lines(3).ToString())
+    Assert.DoesNotContain(changed.GetDiagnostics(), Function(d) d.Severity = Microsoft.CodeAnalysis.DiagnosticSeverity.Error)
+  End Sub
+
+  <Fact>
   Public Sub ABareStatementCountsToo()
     Dim built = Build("Module Demo" & vbLf & "  Sub Main()" & vbLf & "    CLS" & vbLf & "  End Sub" & vbLf & "End Module")
 

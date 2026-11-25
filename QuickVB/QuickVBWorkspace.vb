@@ -14,6 +14,7 @@ Imports Microsoft.CodeAnalysis.Text
 Imports Microsoft.CodeAnalysis.Host.Mef
 Imports Microsoft.CodeAnalysis.Emit
 Imports Microsoft.CodeAnalysis.VisualBasic
+Imports Microsoft.CodeAnalysis.VisualBasic.Syntax
 
 Public Class QuickVBWorkspace
   Inherits Workspace
@@ -189,14 +190,14 @@ Public Class QuickVBWorkspace
   ''' <summary>The QB namespaces the last background compile found programs asking for (see <see cref="QBLibrary.MissingImports"/>), by file path.</summary>
   Public Property MissingQbImports As Dictionary(Of String, List(Of String)) = New Dictionary(Of String, List(Of String))()
 
-  Private Sub NoteMissingImports(compilation As Compilation)
   ''' <summary>The names the last background compile found written with other casing than they are declared with (see <see cref="Casing.NameFixes"/>), by file path.</summary>
   Public Property NameCasingFixes As Dictionary(Of String, List(Of Casing.NameFix)) = New Dictionary(Of String, List(Of Casing.NameFix))()
 
+  Private Sub NoteMissingImports(compilation As Compilation)
     Try
       Me.MissingQbImports = QBLibrary.MissingImports(compilation)
-    Catch ex As Exception When TypeOf ex Is InvalidOperationException OrElse TypeOf ex Is ArgumentException
       Me.NameCasingFixes = Casing.NameFixes(compilation)
+    Catch ex As Exception When TypeOf ex Is InvalidOperationException OrElse TypeOf ex Is ArgumentException
       ' a compilation that cannot be asked: nothing is added
     End Try
   End Sub
@@ -273,6 +274,7 @@ Public Class QuickVBWorkspace
       If Not background AndAlso transform Is Nothing AndAlso compilation.Options.OutputKind = OutputKind.ConsoleApplication AndAlso
          QBLibrary.LibrariesUsedBy(compilation).Contains(QBLibrary.Sdl) Then
         compilation = compilation.WithOptions(compilation.Options.WithOutputKind(OutputKind.WindowsApplication))
+        compilation = WaitForKeyAtEnd(compilation, cancel)
         Me._windowed = True
       End If
 
@@ -306,6 +308,32 @@ Public Class QuickVBWorkspace
     If Not background Then QBLibrary.WriteTo(BinFolder, used)
 
     Return diagnostics.OrderByDescending(Function(diagnostic) diagnostic.Severity).ToList
+
+  End Function
+
+  ''' <summary>
+  ''' Makes a program that draws leave its window up until a key is pressed when it ends ("Press any key to continue", as QBasic does), by
+  ''' setting <c>QB.Video.WaitForKeyAtExit</c> in front of the first statement of Main. The statement goes on that statement's own line,
+  ''' so the line numbers of the program stay what they are in the editor.
+  ''' </summary>
+  Friend Shared Function WaitForKeyAtEnd(compilation As Compilation, Optional cancel As CancellationToken = Nothing) As Compilation
+
+    Dim entry = compilation.GetEntryPoint(cancel)
+    If entry Is Nothing OrElse entry.DeclaringSyntaxReferences.Length = 0 Then Return compilation
+
+    Dim reference = entry.DeclaringSyntaxReferences(0)
+    ' the reference is the Sub statement; the body belongs to the block around it
+    Dim method = TryCast(reference.GetSyntax(cancel).Parent, MethodBlockSyntax)
+    If method Is Nothing OrElse method.Statements.Count = 0 Then Return compilation
+
+    Dim first = method.Statements(0)
+    If TypeOf first Is LabelStatementSyntax Then Return compilation
+
+    Dim tree = reference.SyntaxTree
+    Dim text = tree.GetText(cancel).WithChanges(New TextChange(New TextSpan(first.SpanStart, 0), "QB.Video.WaitForKeyAtExit = True : "))
+    Dim changed = tree.WithChangedText(text)
+
+    Return compilation.ReplaceSyntaxTree(tree, changed)
 
   End Function
 
