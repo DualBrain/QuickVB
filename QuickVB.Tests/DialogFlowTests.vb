@@ -569,7 +569,7 @@ Public Class DialogFlowTests
 
     Dim platform = If(OperatingSystem.IsWindows(), "Windows", If(OperatingSystem.IsLinux(), "Linux", "macOS"))
     Assert.Contains("QuickVB for " & platform, s.Screen_())
-    Assert.Contains("Version 1.0", s.Screen_())
+    Assert.Contains("Version 0.1", s.Screen_())
     Assert.Contains("Copyright (C) Dartmouth Didn't, 1964-2026.", s.Screen_())
     Assert.Contains("<  OK  >", s.Screen_())
 

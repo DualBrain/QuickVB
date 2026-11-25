@@ -8,7 +8,7 @@
     <AssemblyName>QuickVB</AssemblyName>
     <MyType>Empty</MyType>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-    <Version>1.0.0</Version>
+    <Version>0.1.0</Version>
     <Authors>Cory Smith</Authors>
     <Product>QuickVB</Product>
     <Description>A QuickBASIC-style editor, compiler and debugger for Visual Basic, for the terminal.</Description>
