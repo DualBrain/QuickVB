@@ -17,6 +17,7 @@ Partial Public Class MyScreen
     {"Unload File", {"Takes the chosen file out of the program. Changes that", "were not saved can be saved first."}},
     {"Switch to", {"Shows another file of the program in the editor."}},
     {"Set Main Module", {"When several files have a Main, this one starts the program."}},
+    {"Samples", {"Programs that come with QuickVB. Open shows the chosen one in the", "editor; Save As writes a copy to a file of your own."}},
     {"SUBs", {"Lists the files of the program and their SUBs and FUNCTIONs.", "Edit in Active shows the chosen item; Delete removes a procedure."}},
     {"New SUB", {"Type the name of the new SUB. It is added at the end of the module."}},
     {"New FUNCTION", {"Type the name of the new FUNCTION. It is added at the end", "of the module."}},

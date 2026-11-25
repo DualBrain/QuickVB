@@ -90,6 +90,7 @@ Partial Public Class MyScreen
 
     FileMenu.SetMenuItems(New MenuItem() {New MenuItem(Name:="&New Program", Action:=Sub() Me.Post(AddressOf Me.NewProgram)),
                                           New MenuItem(Name:="&Open Program...", Action:=Sub() Me.Post(AddressOf Me.ShowOpenDialog)),
+                                          New MenuItem(Name:="Sampl&es...", Action:=Sub() Me.Post(AddressOf Me.ShowSamplesDialog)),
                                           New MenuItem(Name:="&Merge...", Action:=Sub() Me.Post(AddressOf Me.ShowMergeDialog)),
                                           New MenuItem(Name:="&Save", Action:=Sub() Me.Post(Sub() Me.SaveProgram())),
                                           New MenuItem(Name:="Save &As...", Action:=Sub() Me.Post(AddressOf Me.ShowSaveAsDialog)),

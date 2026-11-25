@@ -158,6 +158,9 @@ Namespace ConsoleGUI
     ''' <summary>Appended to a typed file name without an extension in Save mode, for example ".bas".</summary>
     Public Property DefaultExtension As String
 
+    ''' <summary>A file name the Save box starts with (selected, so typing replaces it); Nothing for an empty box.</summary>
+    Public Property SuggestedName As String
+
     Public ReadOnly Property CurrentDirectory As String
       Get
         Return Me._directory
@@ -252,6 +255,11 @@ Namespace ConsoleGUI
       End If
 
       Me.Navigate(Path.GetFullPath(startDirectory), Nothing)
+
+      If Me.Mode = FileDialogMode.Save AndAlso Not String.IsNullOrEmpty(Me.SuggestedName) Then
+        Me._typed = Me.SuggestedName
+        Me._typedSelected = True
+      End If
 
       Me._previousPopup = screen.PopupControl
       screen.Controls.Add(Me)

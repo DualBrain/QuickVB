@@ -882,4 +882,53 @@ Public Class DialogFlowTests
     Assert.Equal(2, s.Ui.EditorView.CursorColumn)
   End Sub
 
+  ' ---- samples
+
+  <Fact>
+  Public Sub TheSamplesBoxListsTheSamples()
+    Dim s As New Session()
+
+    s.Menu("f", "e")
+
+    Dim text = s.Screen_()
+    Assert.True(text.Contains(" Samples "), text)
+    Assert.True(text.Contains("Nibbles"), text)
+    Assert.True(text.Contains("Gorilla"), text)
+    Assert.Contains("< Open >", text)
+    Assert.Contains("< Save As... >", text)
+    Assert.Contains("Steer the snake", text)
+  End Sub
+
+  <Fact>
+  Public Sub OpeningASampleLoadsItAsAProgramWithoutAFile()
+    Dim s As New Session()
+
+    s.Menu("f", "e")
+    s.Press(VirtualKey.VK_DOWN)   ' Gorilla
+    s.Press(VirtualKey.VK_RETURN) ' Open
+    s.Type("n")                   ' the program that was there has changes: not saved
+
+    Assert.Null(s.Ui.CurrentPath)
+    Assert.True(s.Ui.Editor.Text.ToUpperInvariant().Contains("GORILLA"), s.Screen_())
+    Assert.Contains("Imports QB", s.Ui.Editor.Text)
+    Assert.Contains("Gorilla", s.Console.RowText(1))
+  End Sub
+
+  <Fact>
+  Public Sub ASampleIsSavedWhereThePersonChooses()
+    Dim s As New Session()
+    Dim target = Path.Combine(Me._root, "my nibbles.vb")
+
+    s.Menu("f", "e")
+    s.Type("s")                   ' Save As...
+    Assert.Contains(" Save As ", s.Screen_())
+    Assert.Contains("NIBBLES.vb", s.Screen_())   ' the name it starts with
+    s.Type(target)
+    s.Press(VirtualKey.VK_RETURN)
+
+    Assert.Equal(SampleLibrary.All()(0).Text(), File.ReadAllText(target))
+    Assert.Contains("Saved my nibbles.vb", s.StatusLine())
+    Assert.Equal(s.Initial, s.Ui.Editor.Text)     ' the program being edited is untouched
+  End Sub
+
 End Class
