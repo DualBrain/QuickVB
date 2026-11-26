@@ -34,6 +34,7 @@ Public Module HelpContent
 
   ''' <summary>Finds a topic (Nothing when there is none with that id).</summary>
   Public Function Find(id As String) As HelpTopic
+    If HelpDocs.IsDocId(id) Then Return HelpDocs.Find(id)
     If _topics Is Nothing Then _topics = Build()
     Dim topic As HelpTopic = Nothing
     Return If(_topics.TryGetValue(id, topic), topic, Nothing)
@@ -118,6 +119,9 @@ Public Module HelpContent
                        "     [[Help Keys|" & HelpKeysId & "]]",
                        "",
                        " {{Reference}}",
+                       "     [[Visual Basic Keywords|" & HelpDocs.VbCategoriesId & "]]",
+                       "     [[Statements and Functions by Category|" & HelpDocs.QbCategoriesId & "]]",
+                       "     [[Keywords, A to Z|" & HelpDocs.AlphabeticalId & "]]",
                        "     [[QuickVB Command Line|" & CommandLineId & "]]",
                        "     [[Help on Help|" & HelpOnHelpId & "]]",
                        "     [[Product Support|" & SupportId & "]]"}))
@@ -133,12 +137,15 @@ Public Module HelpContent
                        "     [[Help Keys|" & HelpKeysId & "]]",
                        "     [[Help on Help|" & HelpOnHelpId & "]]",
                        "     [[Insert and Copy Keys|" & InsertCopyId & "]]",
+                       "     [[Keywords, A to Z|" & HelpDocs.AlphabeticalId & "]]",
                        "     [[Product Support|" & SupportId & "]]",
                        "     [[Search Keys|" & SearchKeysId & "]]",
                        "     [[Shortcut Keys|" & ShortcutId & "]]",
+                       "     [[Statements and Functions by Category|" & HelpDocs.QbCategoriesId & "]]",
                        "     [[Text Scrolling Keys|" & ScrollingId & "]]",
                        "     [[Text Selection Keys|" & SelectingId & "]]",
-                       "     [[View Keys|" & ViewKeysId & "]]"}))
+                       "     [[View Keys|" & ViewKeysId & "]]",
+                       "     [[Visual Basic Keywords|" & HelpDocs.VbCategoriesId & "]]"}))
 
     add(New HelpTopic(HelpOnHelpId, "Help on Help", Nav("Help on Help", HelpOnHelpId, ("Contents", ContentsId), ("Index", IndexId), ("Product Support", SupportId)),
                       {"Use help as follows:",
@@ -146,6 +153,9 @@ Public Module HelpContent
                        "  " & ChrW(&H25A0) & " To get help at any time, {{press F1}}.",
                        "  " & ChrW(&H25A0) & " To get help on any part of a BASIC statement, a QuickVB menu item",
                        "    or dialog box, position the cursor there {{press F1}}.",
+                       "    A keyword or a QuickBASIC statement is looked up by its name; the",
+                       "    topics of Visual Basic keywords link to Microsoft's documentation,",
+                       "    which opens in your browser.",
                        "  " & ChrW(&H25A0) & " To remove the help information from the screen, {{press ESC}}.",
                        "  " & ChrW(&H25A0) & " To scroll help information, {{press PGDN}}.",
                        "",

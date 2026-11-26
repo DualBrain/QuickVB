@@ -22,6 +22,7 @@ Public Class HelpWindowTests
     result("a") = New HelpTopic("a", "Alpha", {New HelpNavItem("Alpha", "a", True), New HelpNavItem("Beta", "b"), New HelpNavItem("Index", "i")}, many)
     result("b") = New HelpTopic("b", "Beta", {New HelpNavItem("Alpha", "a"), New HelpNavItem("Beta", "b", True)}, {"Beta body", "[[Back to alpha|a]]"})
     result("c") = New HelpTopic("c", "Gamma", {New HelpNavItem("Gamma", "c", True)}, {"Gamma body"})
+    result("u") = New HelpTopic("u", "Online", {New HelpNavItem("Online", "u", True)}, {"Read [[the docs|https://example.com/page]] now."})
     result("i") = New HelpTopic("i", "Index", {New HelpNavItem("Index", "i", True)}, {"Index body"}, ruleTitle:="Index Rule")
     Return result
 
@@ -68,6 +69,20 @@ Public Class HelpWindowTests
   End Sub
 
   ' ---- drawing
+
+  <Fact>
+  Public Sub AnAddressIsOpenedInTheBrowserAndTheTopicStays()
+    Dim console As New HeadlessConsole(80, 25)
+    Dim screen As New HelpScreen(console, openOn:="u")
+    Dim opened As New List(Of String)()
+    screen.Help.OnOpenUrl = Sub(url) opened.Add(url)
+
+    Key(console, VirtualKey.VK_RETURN)
+    screen.Run()
+
+    Assert.Equal({"https://example.com/page"}, opened)
+    Assert.Equal("u", screen.Help.CurrentTopic.Id)
+  End Sub
 
   <Fact>
   Public Sub DrawsTheTitleLinkBarRuleAndText()

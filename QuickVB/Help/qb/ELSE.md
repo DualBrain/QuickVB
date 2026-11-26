@@ -1,0 +1,3 @@
+# ELSE
+
+See [IF](IF), [SELECT](SELECT).

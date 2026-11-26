@@ -266,7 +266,7 @@ Public Class HelpFlowTests
       Dim ui2 = Me.Ui
       Me.Ui.Post(Sub()
                    App.NewUntitledWorkspace()
-                   ui2.ViewDocument("Untitled", "Untitled.vb", "Module Untitled" & vbCrLf & "  Sub Main()" & vbCrLf & "  End Sub" & vbCrLf & "End Module", title:="Untitled")
+                   ui2.ViewDocument("Untitled", "Untitled.vb", "' Untitled" & vbCrLf & "Module Untitled" & vbCrLf & "  Sub Main()" & vbCrLf & "  End Sub" & vbCrLf & "End Module", title:="Untitled")
                    ui2.EnableRoslyn()
                  End Sub)
       Me.Run()
@@ -298,6 +298,17 @@ Public Class HelpFlowTests
     End Function
 
   End Class
+
+  <Fact>
+  Public Sub F1OnAKeywordOpensItsTopic()
+    Dim s As New Session()
+    s.Ui.EditorView.MoveCursor(2, 4)         ' on "Sub" of "  Sub Main()"
+    s.Press(VirtualKey.VK_F1)
+
+    Assert.True(s.Ui.Help.Visible)
+    Assert.Equal("kw:SUB", s.Ui.Help.CurrentTopic.Id)
+    Assert.Contains("SUB Statement", s.Text())
+  End Sub
 
   <Fact>
   Public Sub F1OpensTheContentsAboveTheEditorAndEscapeClosesIt()

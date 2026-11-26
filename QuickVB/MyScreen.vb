@@ -516,8 +516,54 @@ Partial Public Class MyScreen
     If (e.ControlKeyState And ControlKeyState.SHIFT_PRESSED) <> 0 OrElse (Me.HelpPane.Visible AndAlso Me.ActiveControl Is Me.HelpPane) Then
       Me.ShowHelp(HelpContent.HelpOnHelpId)
     Else
-      Me.ShowHelp(HelpContent.ContentsId)
+      Me.ShowHelp(If(Me.TopicUnderCursor(), HelpContent.ContentsId))
     End If
+
+  End Sub
+
+  ' F1 on a keyword, or on a QuickBASIC statement or function, opens its topic
+  Private Function TopicUnderCursor() As String
+
+    Dim view = TryCast(Me.ActiveBufferView, TextBufferView)
+    If view Is Nothing OrElse view.Buffer Is Nothing OrElse view.CursorRow >= view.Buffer.Lines.Count Then Return Nothing
+
+    Dim text = view.Buffer.Lines(view.CursorRow).Text
+    Dim column = Math.Min(view.CursorColumn, text.Length)
+
+    ' the word the cursor is in or right after
+    Dim first = column
+    Do While first > 0 AndAlso IsWordChar(text(first - 1))
+      first -= 1
+    Loop
+    Dim last = column
+    Do While last < text.Length AndAlso IsWordChar(text(last))
+      last += 1
+    Loop
+    If last = first Then Return Nothing
+
+    Try
+      Return HelpDocs.TopicIdOf(text.Substring(first, last - first))
+    Catch ex As Exception When TypeOf ex Is InvalidOperationException OrElse TypeOf ex Is ArgumentException
+      Return Nothing
+    End Try
+
+  End Function
+
+  Private Shared Function IsWordChar(c As Char) As Boolean
+    Return Char.IsLetterOrDigit(c) OrElse c = "_"c
+  End Function
+
+  ' a hyperlink of the help to a page of Microsoft's documentation: the browser of the system shows it
+  Private Sub OpenInBrowser(url As String)
+
+    If Not url.StartsWith("https://", StringComparison.OrdinalIgnoreCase) Then Return
+
+    Try
+      Process.Start(New ProcessStartInfo(url) With {.UseShellExecute = True})
+      Me.SetStatus("Opened " & url & " in your browser", False)
+    Catch ex As Exception When TypeOf ex Is System.ComponentModel.Win32Exception OrElse TypeOf ex Is InvalidOperationException OrElse TypeOf ex Is PlatformNotSupportedException
+      Me.SetStatus("Could not open " & url & ": " & ex.Message, True)
+    End Try
 
   End Sub
 
@@ -1555,6 +1601,8 @@ Partial Public Class MyScreen
 
   Private Sub InitializeHelp()
     Me.HelpPane.Topics = AddressOf HelpContent.Find
+    StatementHelp.CompilationSource = Function() App.TheWorkspace.CurrentSolution.Projects.First().GetCompilationAsync().Result
+    Me.HelpPane.OnOpenUrl = AddressOf Me.OpenInBrowser
     Me.HelpPane.TopicOrder = HelpContent.Order
     Me.HelpPane.OnClose = AddressOf Me.CloseHelp
     Me.HelpPane.OnLayoutChanged = Sub()

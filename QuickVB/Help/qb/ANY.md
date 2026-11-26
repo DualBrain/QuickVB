@@ -1,0 +1,3 @@
+# ANY
+
+See [DECALRE](DECLARE).

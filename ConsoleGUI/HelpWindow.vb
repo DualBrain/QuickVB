@@ -73,6 +73,9 @@ Namespace ConsoleGUI
     ''' <summary>The ids of the topics in the order Ctrl+F1 steps through them.</summary>
     Public Property TopicOrder As IReadOnlyList(Of String)
 
+    ''' <summary>Called with the address of a hyperlink that is one (<c>[[text|https://...]]</c>): the topic stays as it is.</summary>
+    Public Property OnOpenUrl As Action(Of String)
+
     ''' <summary>Called when the user presses Esc.</summary>
     Public Property OnClose As Action
 
@@ -152,6 +155,11 @@ Namespace ConsoleGUI
 
     ''' <summary>Follows a hyperlink: shows the topic and remembers the current one for <see cref="GoBack"/> (20 deep).</summary>
     Public Function Follow(id As String) As Boolean
+      ' an address leaves the help window: it is for the browser
+      If id.StartsWith("https://", StringComparison.OrdinalIgnoreCase) Then
+        If Me.OnOpenUrl IsNot Nothing Then Me.OnOpenUrl.Invoke(id)
+        Return True
+      End If
       Dim current = If(Me._topic Is Nothing, Nothing, Me._topic.Id)
       If Me.Show(id) Then
         If current IsNot Nothing AndAlso current <> id Then

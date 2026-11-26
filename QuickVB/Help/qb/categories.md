@@ -1,0 +1,193 @@
+# Statements and Functions by Category
+
+## Screen and Text
+
+* [CLS](CLS)
+* [LOCATE](LOCATE)
+* [PRINT](PRINT)
+* [PRINT USING](PRINT-USING)
+* [COLOR](COLOR)
+* [WIDTH](WIDTH)
+* [VIEW PRINT](VIEW-PRINT)
+* [CSRLIN](CSRLIN)
+* [POS](POS)
+* [SPC](SPC)
+* [TAB](TAB)
+* [SCREEN Function](SCREEN-Function)
+* [SCREEN](SCREEN)
+* [BEEP](BEEP)
+* [SOUND](SOUND)
+* [PLAY](PLAY)
+
+## Graphics
+
+* [SCREEN](SCREEN)
+* [PSET](PSET)
+* [PRESET](PRESET)
+* [LINE](LINE)
+* [CIRCLE](CIRCLE)
+* [PAINT](PAINT)
+* [DRAW](DRAW)
+* [GET](GET)
+* [PUT](PUT)
+* [POINT](POINT)
+* [PALETTE](PALETTE)
+* [VIEW](VIEW)
+* [WINDOW](WINDOW)
+* [PMAP](PMAP)
+* [PCOPY](PCOPY)
+
+## Keyboard and Input
+
+* [INPUT](INPUT)
+* [LINE INPUT](LINE-INPUT)
+* [INKEY$](INKEY$)
+* [INPUT$](INPUT$)
+* [KEY](KEY)
+* [STICK](STICK)
+* [STRIG](STRIG)
+* [PEN](PEN)
+
+## Files and Directories
+
+* [OPEN](OPEN)
+* [CLOSE](CLOSE)
+* [PRINT](PRINT)
+* [WRITE](WRITE)
+* [INPUT FILE](INPUT-FILE)
+* [LINE INPUT](LINE-INPUT)
+* [GET FILE](GET-FILE)
+* [PUT](PUT)
+* [SEEK](SEEK)
+* [EOF](EOF)
+* [LOF](LOF)
+* [LOC](LOC)
+* [FREEFILE](FREEFILE)
+* [FILES](FILES)
+* [KILL](KILL)
+* [NAME](NAME)
+* [MKDIR](MKDIR)
+* [CHDIR](CHDIR)
+* [RMDIR](RMDIR)
+* [LOCK](LOCK)
+* [UNLOCK](UNLOCK)
+* [FIELD](FIELD)
+* [LSET](LSET)
+* [RSET](RSET)
+* [RESET](RESET)
+
+## Strings
+
+* [ASC](ASC)
+* [CHR$](CHR$)
+* [HEX$](HEX$)
+* [OCT$](OCT$)
+* [INSTR](INSTR)
+* [LCASE$](LCASE$)
+* [UCASE$](UCASE$)
+* [LEFT$](LEFT$)
+* [RIGHT$](RIGHT$)
+* [MID$](MID$)
+* [LEN](LEN)
+* [LTRIM$](LTRIM$)
+* [RTRIM$](RTRIM$)
+* [SPACE$](SPACE$)
+* [STRING$](STRING$)
+* [STR$](STR$)
+* [VAL](VAL)
+
+## Numbers and Math
+
+* [ABS](ABS)
+* [ATN](ATN)
+* [COS](COS)
+* [EXP](EXP)
+* [FIX](FIX)
+* [INT](INT)
+* [LOG](LOG)
+* [RND](RND)
+* [RANDOMIZE](RANDOMIZE)
+* [SGN](SGN)
+* [SIN](SIN)
+* [SQR](SQR)
+* [TAN](TAN)
+* [CDBL](CDBL)
+* [CINT](CINT)
+* [CLNG](CLNG)
+* [CSNG](CSNG)
+* [MOD](MOD)
+
+## Arrays and Data
+
+* [DIM](DIM)
+* [REDIM](REDIM)
+* [ERASE](ERASE)
+* [LBOUND](LBOUND)
+* [UBOUND](UBOUND)
+* [SWAP](SWAP)
+* [DATA](DATA)
+* [READ](READ)
+* [RESTORE](RESTORE)
+* [CLEAR](CLEAR)
+* [CONST](CONST)
+* [OPTION BASE](OPTION-BASE)
+
+## Program Control
+
+* [IF...THEN](IF...THEN)
+* [SELECT CASE](SELECT-CASE)
+* [FOR...NEXT](FOR...NEXT)
+* [DO...LOOP](DO...LOOP)
+* [GOTO](GOTO)
+* [GOSUB](GOSUB)
+* [RETURN](RETURN)
+* [ON...GOTO](ON...GOTO)
+* [ON...GOSUB](ON...GOSUB)
+* [END](END)
+* [STOP](STOP)
+* [SYSTEM](SYSTEM)
+* [SHELL](SHELL)
+* [SLEEP](SLEEP)
+* [CHAIN](CHAIN)
+* [RUN](RUN)
+
+## Procedures
+
+* [SUB](SUB)
+* [FUNCTION](FUNCTION)
+* [CALL](CALL)
+* [DECLARE](DECLARE)
+* [SHARED](SHARED)
+* [STATIC](STATIC)
+* [COMMON](COMMON)
+
+## Errors and Events
+
+* [ON ERROR GOTO](ON-ERROR-GOTO)
+* [RESUME](RESUME)
+* [ERROR](ERROR)
+* [ERR](ERR)
+* [ERL](ERL)
+* [ON TIMER(n)](ON-TIMER(n))
+* [ON KEY(n)](ON-KEY(n))
+* [ON PLAY(n)](ON-PLAY(n))
+* [ON STRIG(n)](ON-STRIG(n))
+* [TIMER](TIMER)
+
+## Date and Time
+
+* [DATE$](DATE$)
+* [TIME$](TIME$)
+* [TIMER](TIMER)
+
+## System
+
+* [ENVIRON$](ENVIRON$)
+* [ENVIRON](ENVIRON)
+* [FRE](FRE)
+* [PEEK](PEEK)
+* [POKE](POKE)
+* [INP](INP)
+* [OUT](OUT)
+* [DEF SEG](DEF-SEG)
+* [VARPTR](VARPTR)

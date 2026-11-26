@@ -1,0 +1,3 @@
+# $STATIC
+
+See [$DYNAMIC]($DYNAMIC).

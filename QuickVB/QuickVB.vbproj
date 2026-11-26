@@ -41,6 +41,11 @@
     <SdlCsVersion>1.0.82</SdlCsVersion>
   </PropertyGroup>
 
+  <!-- The help of the language: a Markdown file for each keyword and statement (see HelpDocs) -->
+  <ItemGroup>
+    <EmbeddedResource Include="Help\**\*.md" LogicalName="help/%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
   <Target Name="EmbedLibraries" BeforeTargets="AssignTargetPaths" DependsOnTargets="ResolveReferences">
     <PropertyGroup>
       <_QbLib>$(NuGetPackageRoot)qb.compatibility/$(QbVersion)/lib/net10.0/</_QbLib>
