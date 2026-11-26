@@ -15,20 +15,79 @@ Partial Public Class MyScreen
                           AddressOf Me.ConfirmProject, Nothing)
   End Sub
 
+  Friend Sub ConfirmProjectForTest(path As String)
+    Me.ConfirmProject(path)
+  End Sub
+
   Private Sub ConfirmProject(path As String)
 
     If IO.File.Exists(path) Then
       Dim d As New FormDialog()
       d.AddText(IO.Path.GetFileName(path) & " already exists.")
       d.AddText("Do you want to replace it?")
-      d.AddButton("< Yes >", "Y"c, Sub() Me.WriteProject(path), isDefault:=True)
+      d.AddButton("< Yes >", "Y"c, Sub() Me.WarnOfOtherSources(path), isDefault:=True)
       d.AddButton("< No >", "N"c, isCancel:=True)
       d.Show(Me)
     Else
-      Me.WriteProject(path)
+      Me.WarnOfOtherSources(path)
     End If
 
   End Sub
+
+  ' A project compiles every .vb file below its folder: say so when there are some that are not the program's
+  Private Sub WarnOfOtherSources(path As String)
+
+    Dim others = Me.OtherSources(path)
+
+    If others.Count = 0 Then
+      Me.WriteProject(path)
+      Return
+    End If
+
+    Dim shown = String.Join(", ", others.Take(3)) & If(others.Count > 3, ", ... (" & others.Count & " files)", "")
+    Dim d As New FormDialog()
+    d.AddText("The folder has other .vb files, which the project will compile too:")
+    d.AddText(shown)
+    d.AddText("Save the project anyway?")
+    d.AddButton("< Yes >", "Y"c, Sub() Me.WriteProject(path))
+    d.AddButton("< No >", "N"c, isDefault:=True, isCancel:=True)
+    d.Show(Me)
+
+  End Sub
+
+  ' the .vb files of the project's folder (and below it) that are not files of this program
+  Private Function OtherSources(path As String) As List(Of String)
+
+    Dim folder = IO.Path.GetDirectoryName(IO.Path.GetFullPath(path))
+    Dim name = IO.Path.GetFileNameWithoutExtension(path)
+
+    Dim own As New HashSet(Of String)(StringComparer.OrdinalIgnoreCase)
+    If Me._files.Count = 0 Then
+      own.Add(IO.Path.Combine(folder, If(Me._currentPath IsNot Nothing, IO.Path.GetFileName(Me._currentPath), name & ".vb")))
+    Else
+      For Each file In Me._files
+        own.Add(IO.Path.Combine(folder, If(file.Path IsNot Nothing, IO.Path.GetFileName(file.Path), If(Me._files.Count = 1, name & ".vb", file.Name))))
+      Next
+    End If
+
+    Dim result As New List(Of String)()
+    If Not IO.Directory.Exists(folder) Then Return result
+
+    Dim bin = IO.Path.Combine(folder, "bin") & IO.Path.DirectorySeparatorChar
+    Dim obj = IO.Path.Combine(folder, "obj") & IO.Path.DirectorySeparatorChar
+
+    Try
+      For Each file In IO.Directory.EnumerateFiles(folder, "*.vb", IO.SearchOption.AllDirectories)
+        If file.StartsWith(bin, StringComparison.OrdinalIgnoreCase) OrElse file.StartsWith(obj, StringComparison.OrdinalIgnoreCase) Then Continue For
+        If Not own.Contains(file) Then result.Add(IO.Path.GetRelativePath(folder, file))
+      Next
+    Catch ex As Exception When TypeOf ex Is IO.IOException OrElse TypeOf ex Is UnauthorizedAccessException
+      ' a folder that can't be listed: no warning
+    End Try
+
+    Return result
+
+  End Function
 
   ''' <summary>Writes the project file at <paramref name="path"/> and saves the program's source next to it.</summary>
   Public Sub WriteProject(path As String)

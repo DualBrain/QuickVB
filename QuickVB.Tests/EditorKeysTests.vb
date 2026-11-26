@@ -492,6 +492,27 @@ Public Class EditorKeysTests
   End Sub
 
   <Fact>
+  Public Sub SaveAsProjectWarnsOfOtherSourceFilesInTheFolder()
+    Dim s As New Session("Module Program" & vbLf & "  Sub Main()" & vbLf & "  End Sub" & vbLf & "End Module")
+
+    Dim folder = IO.Path.Combine(IO.Path.GetTempPath(), "qvb-project-" & Guid.NewGuid().ToString("N"))
+    IO.Directory.CreateDirectory(folder)
+    Try
+      IO.File.WriteAllText(IO.Path.Combine(folder, "Other.vb"), "Module Other" & vbLf & "End Module")
+      Dim path = IO.Path.Combine(folder, "Hello.vbproj")
+
+      s.Do_(Sub() s.Ui.ConfirmProjectForTest(path))
+      WaitFor(s, Function() s.Console.GetText().Contains("Other.vb"))
+
+      Assert.False(IO.File.Exists(path))     ' nothing is written until it is agreed to
+      s.Console.QueueText("y")
+      WaitFor(s, Function() IO.File.Exists(path))
+    Finally
+      IO.Directory.Delete(folder, True)
+    End Try
+  End Sub
+
+  <Fact>
   Public Sub EnterInTheMiddleOfAHeaderDoesNotWriteAnEnd()
     Dim s As New Session("")
 
