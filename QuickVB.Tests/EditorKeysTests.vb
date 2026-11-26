@@ -438,6 +438,16 @@ Public Class EditorKeysTests
   End Sub
 
   <Fact>
+  Public Sub NewProgramStartsWithHelloWorld()
+    Dim s As New Session("")
+
+    s.Do_(Sub() s.Ui.NewProgram())
+
+    WaitFor(s, Function() s.Ui.EditorView.Buffer.Text.Contains("Hello World!"))
+    Assert.Contains("Module Program", s.Ui.EditorView.Buffer.Text)
+  End Sub
+
+  <Fact>
   Public Sub EnterInTheMiddleOfAHeaderDoesNotWriteAnEnd()
     Dim s As New Session("")
 
