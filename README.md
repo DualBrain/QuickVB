@@ -69,17 +69,17 @@ And this GitHub project's own list:
 
 * ~~Move to latest release of "Roslyn"~~ (done: Roslyn 5.x)
 * ~~Move to newer version of .NET~~ (done: .NET 10)
-* Migrate from being a "demo" to a full-featured (for a Console app) IDE (WIP)
-* Match menus and other UI elements to original QuickBASIC IDE (WIP)
-* ~~Improve ConsoleGUI to support "popup" windows; needed for additional functionality~~ (done: dialogs, file dialogs, message boxes)
-* ~~Improve ConsoleGUI to support activation of additional panels (help)~~ (done: the Help window, the Watch pane and View > Split)
-* Integrate "help" with online Microsoft documentation
+* ~~Migrate from being a "demo" to a full-featured (for a Console app) IDE~~ (done)
+* ~~Match menus and other UI elements to original QuickBASIC IDE~~ (done)
+* ~~Improve ConsoleGUI to support "popup" windows; needed for additional functionality~~ (done)
+* ~~Improve ConsoleGUI to support activation of additional panels (help)~~ (done)
+* ~~Integrate "help" with online Microsoft documentation~~ (done)
 * ~~Enable "Roslyn" by default~~ (done; *Options > Disable Roslyn* switches it off)
 * ~~Remove "self-editing".~~ (done)
 * Debug > Trace On, History On (Shift+F8 / Shift+F10) and Set Next Statement
 * ~~Replace the QuickBasic library included here with the QB.Compatibility NuGet package~~ (done; see *QuickBASIC statements*)
 * ~~Actually port GORILLA.BAS as an included sample~~ (done; see *The sample games*, which adds NIBBLES.BAS)
-* Install as a dotnet tool (follows the library change above)
+* ~~Install as a dotnet tool~~ (done)
 
 ## What QuickVB does today
 
@@ -90,16 +90,51 @@ And this GitHub project's own list:
 * **Programs of several files, and projects** - load, create, unload and save files; open a `.vbproj`, `.sln` or `.slnx`; choose the main module; jump between procedures across files.
 * **View > Split** - two editor windows, kept in step when they show the same file.
 * **A debugger** - breakpoints, step into/over/out, run to cursor, Watch window, watchpoints, Instant Watch, the Calls menu, Break on Errors and the program's output screen.
-* **Built-in help** - F1 opens QuickBASIC's keyboard reference, the command line and per-dialog help.
+* **Built-in help** - F1 opens the topic of the keyword under the cursor: the Visual Basic keywords (with links to Microsoft Learn, opened in your browser), the QuickBASIC statements and functions, QuickBASIC's keyboard reference, the command line and per-dialog help.
 * **A POSIX style command line** - open a program, run it on start, pass `COMMAND$`.
-* **One file to copy** - a single executable, with a portable mode that keeps settings beside it.
 
 Each of these is described below.
 
 ## Requirements
 
-* [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) (Windows or Linux) - build with `dotnet build QuickVB.sln`, run with `dotnet run --project QuickVB`.
-  Programs written inside QuickVB are compiled against the .NET 10 reference assemblies and run with the `dotnet` host. Make EXE File writes a launcher for the machine you are on (`.exe` on Windows, an executable file on Linux).
+* The [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) (Windows or Linux). Programs written inside QuickVB are compiled against the .NET 10 reference assemblies and run with the `dotnet` host. Make EXE File writes a launcher for the machine you are on (`.exe` on Windows, an executable file on Linux), using a template from the SDK.
+* A VT100/xterm compatible terminal (Windows Terminal, or any Linux terminal) - see *Terminal rendering*.
+
+## Install, update and uninstall
+
+QuickVB is a [.NET tool](https://learn.microsoft.com/dotnet/core/tools/global-tools) on [nuget.org](https://www.nuget.org/packages/quickvb):
+
+```
+dotnet tool install --global quickvb
+```
+
+then start it with `quickvb` (or `quickvb myprogram.vb`). To get a newer version, or to remove it:
+
+```
+dotnet tool update --global quickvb
+dotnet tool uninstall --global quickvb
+```
+
+`dotnet tool list --global` shows what is installed, and `quickvb --version` the version of QuickVB.
+
+### `quickvb: command not found`
+
+.NET puts global tools in `~/.dotnet/tools` (`%USERPROFILE%\.dotnet\tools` on Windows). The installer of the SDK for Windows, and the Microsoft packages for Linux, add that folder to your `PATH`, but an SDK installed with the `dotnet-install` script, from a tarball or from some distribution packages does not, so on Linux `quickvb` may not be found right after installing. Add the folder to the `PATH` of your shell (for bash, once):
+
+```
+echo 'export PATH="$PATH:$HOME/.dotnet/tools"' >> ~/.bashrc
+```
+
+and open a new terminal (or run `source ~/.bashrc`). On Windows a terminal that was open during the install has to be reopened to see the new `PATH`.
+
+### Building from source
+
+```
+dotnet build QuickVB.sln
+dotnet run --project QuickVB
+```
+
+`./build/publish.ps1 -Runtime win-x64` (or `linux-x64`) makes `artifacts/<runtime>/quickvb[.exe]`, a single file of about 32 MB (it holds the SDL2 library of every platform, and the sample programs) that can be copied anywhere and run, and `dotnet pack QuickVB` makes the NuGet package.
 
 ## QuickBASIC statements
 
@@ -116,16 +151,6 @@ The QuickBASIC and QBasic statements and functions (`PRINT`, `LOCATE`, `CLS`, `O
 `Gorilla` and `Nibbles` are the classic QBasic games that came with QBasic, converted to Visual Basic for QB.Compatibility (with the `qb2vb` converter from that project). They are part of QuickVB itself: **File > Samples** lists them, **Open** shows the chosen one in the editor (press F5 to play) and **Save As...** writes a copy to a file of your own, to keep and change. Nibbles uses the text screen; Gorilla draws, so it opens an SDL2 window. More samples can be added the same way.
 
 In the source tree each folder has the original (`GORILLA.BAS`, `NIBBLES.BAS`) next to the converted program (`GORILLA.vb`, `NIBBLES.vb`) and a project for it (`dotnet run --project Nibbles`); the converted files are what QuickVB embeds. The QuickVB tests compile both as they are, to be sure they stay working.
-
-## A single file to copy (xcopy deployment)
-
-```
-./build/publish.ps1 -Runtime win-x64,linux-x64 -Zip
-```
-
-makes `artifacts/<runtime>/quickvb.exe` (or `quickvb`): one file of about 32 MB (about 11.5 MB zipped; it holds the SDL2 library of every platform for graphics, and the sample programs) that can be copied anywhere and run. Nothing else is needed beside it, and nothing is written next to it (see below; add a `quickvb.portable` file next to it to keep settings with it). The .NET 10 runtime has to be installed, because QuickVB runs the programs you write with it, and the .NET SDK is needed for Make EXE File (it takes the launcher template from the SDK).
-
-Self-contained and trimmed builds were measured (win-x64): framework-dependent single file 20.6 MB; self-contained and compressed 44.9 MB; self-contained, compressed and partly trimmed 21.0 MB. Almost all of the size is Roslyn (the compiler, 12 MB) and the .NET reference assemblies programs are compiled against (6 MB), which can't be trimmed because Roslyn finds its parts by reflection. A trimmed self-contained file is no smaller than the framework-dependent one, and a trimmed runtime could not run the programs you write, so the framework-dependent file is the one to ship. Native AOT is not possible for the same reason.
 
 ## Where QuickVB keeps things
 
@@ -166,7 +191,7 @@ Everything the Help pages list for editing works: Shift + cursor keys (and Shift
 
 ## Help and the command line
 
-Press **F1** for the Help window (Shift+F1 is Help on Help; the Help menu has Contents, Index and the rest). It holds QuickBASIC's keyboard reference pages - Shortcut Keys, the editing keys, View, Search, Debugging and Help keys - and the command line. Inside Help: Tab / Shift+Tab or a letter move between hyperlinks, Enter follows one, Alt+F1 goes back, Ctrl+F1 / Shift+Ctrl+F1 step to the next / previous topic, Ctrl+F10 maximizes, F6 switches windows and Esc closes.
+Press **F1** for the Help window (Shift+F1 is Help on Help; the Help menu has Contents, Index and the rest). With the cursor on a keyword or statement, F1 opens its topic (and the right mouse button does the same): the topics are laid out like QuickBASIC's, with Syntax, Comments, Example and See Also, plus an *Online* link to the Microsoft Learn page for the Visual Basic keywords and runtime functions (Enter on it opens your default browser). The Contents lists the Visual Basic keywords, the QuickBASIC statements by category and an A to Z list; the QuickBASIC statements that QB.Compatibility has are shown with the namespace to import. The window also holds QuickBASIC's keyboard reference pages - Shortcut Keys, the editing keys, View, Search, Debugging and Help keys - and the command line. Inside Help: Tab / Shift+Tab or a letter move between hyperlinks, Enter follows one, Alt+F1 goes back, Ctrl+F1 / Shift+Ctrl+F1 step to the next / previous topic, Ctrl+F10 maximizes, F6 switches windows and Esc closes.
 
 ```
 quickvb [options] [program [text for COMMAND$...]]
