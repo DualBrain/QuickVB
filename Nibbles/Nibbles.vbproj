@@ -13,7 +13,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="QB.Compatibility" Version="0.1.1" />
+    <PackageReference Include="QB.Compatibility" Version="0.1.3" />
   </ItemGroup>
 
 </Project>

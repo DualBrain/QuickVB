@@ -57,7 +57,7 @@ Public Module ProjectWriter
   Public Function LibraryVersion() As String
 
     Dim bytes = QBLibrary.Image(QBLibrary.Core & ".dll")
-    If bytes Is Nothing Then Return "0.1.2"
+    If bytes Is Nothing Then Return "0.1.3"
 
     Using reader As New PEReader(New MemoryStream(bytes))
       Dim version = reader.GetMetadataReader().GetAssemblyDefinition().Version
