@@ -419,6 +419,25 @@ Public Class EditorKeysTests
   End Sub
 
   <Fact>
+  Public Sub DeletingEverythingClearsTheDiagnostics()
+    Dim s As New Session("Module M" & vbLf & "  Sub S()" & vbLf & "    For x = 1 To 3" & vbLf & "  End Sub" & vbLf & "End Module")
+
+    ' the program has an error (the For has no Next) and the diagnostics say so
+    s.Do_(Sub() s.Ui.EditorView.MoveCursor(4, 0))
+    s.Do_(Sub() s.Ui.EditorView.MoveCursor(0, 0))
+    WaitFor(s, Function() s.Console.GetText().Contains("BC30084"))
+
+    ' select everything from the bottom up and delete it: nothing is left to complain about
+    s.Do_(Sub() s.Ui.EditorView.MoveCursor(4, 0))
+    s.Press(VirtualKey.VK_END)
+    s.Press(VirtualKey.VK_HOME, ControlKeyState.LEFT_CTRL_PRESSED Or ControlKeyState.SHIFT_PRESSED)
+    s.Press(VirtualKey.VK_DELETE)
+
+    WaitFor(s, Function() Not s.Console.GetText().Contains("BC30084"))
+    Assert.Equal("", s.Ui.EditorView.Buffer.Text)
+  End Sub
+
+  <Fact>
   Public Sub EnterInTheMiddleOfAHeaderDoesNotWriteAnEnd()
     Dim s As New Session("")
 

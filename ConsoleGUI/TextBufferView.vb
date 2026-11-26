@@ -853,6 +853,9 @@ Namespace ConsoleGUI
       Me.ClearTextSelection()
       Me.DeleteRange(startRow, startColumn, endRow, endColumn)
 
+      ' what was selected is gone: a change that finishes a line, whether or not the cursor leaves its row
+      Me._wholeEdit = True
+
     End Sub
 
     Private Sub DeleteRange(startRow As Integer, startColumn As Integer, endRow As Integer, endColumn As Integer)
@@ -1325,12 +1328,21 @@ Namespace ConsoleGUI
     End Sub
 
     Private lastNotifySpan As New ViewSpan(-1, -1)
+    Private _lastLineCount As Integer = -1
+    Private _wholeEdit As Boolean
 
     Private Sub NotifyCursorMoved(screen As Screen)
 
       Me.UpdateWindow(screen)
 
-      If Me.CursorRow <> Me.lastNotifySpan.StartRow Then
+      ' RowChanged is how a line is "committed" (formatted, compiled): that is also due when lines were added or taken away, or a selection
+      ' was deleted, even when the cursor ends up on the row it was on (select everything and delete: nothing is left to compile)
+      Dim lineCount = If(Me.Buffer Is Nothing, 0, Me.Buffer.Lines.Count)
+      Dim linesChanged = Me._lastLineCount >= 0 AndAlso lineCount <> Me._lastLineCount
+      Me._lastLineCount = lineCount
+
+      If Me.CursorRow <> Me.lastNotifySpan.StartRow OrElse linesChanged OrElse Me._wholeEdit Then
+        Me._wholeEdit = False
         RaiseEvent RowChanged(Me, New RowChangedEventArgs(Me.lastNotifySpan.StartRow, Me.CursorRow))
       End If
 
