@@ -101,8 +101,7 @@ Module App
                          TheScreen.EnableRoslyn()
                          If options.RunProgram Then TheScreen.StartProgram()
                        Else
-                         NewUntitledWorkspace()
-                         TheScreen.ViewDocument("Untitled", "Untitled.vb", "", title:="Untitled")
+                         TheScreen.StartNewProgram()
                          TheScreen.EnableRoslyn()
                          TheScreen.ShowWelcome()
                        End If

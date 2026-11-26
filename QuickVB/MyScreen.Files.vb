@@ -604,7 +604,7 @@ Partial Public Class MyScreen
   ''' <summary>What File &gt; New Program starts with: a program that runs.</summary>
   Friend Const NewProgramText As String = "Module Program" & vbLf & "  Sub Main()" & vbLf & "    PRINT(""Hello World!"")" & vbLf & "  End Sub" & vbLf & "End Module"
 
-  Private Sub StartNewProgram()
+  Friend Sub StartNewProgram()
     App.NewUntitledWorkspace()
     Me.ViewDocument("Untitled", "Untitled.vb", NewProgramText, title:="Untitled")
     If Me.RoslynEnabled Then Me.OnLineCommit(Me.DocumentBuffer)
