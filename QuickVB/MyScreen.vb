@@ -1798,6 +1798,10 @@ Partial Public Class MyScreen
           Me.UpdateDiagnostics(If(Me._syntaxChecking AndAlso Not Me.IsProgramBlank(), diagnostics, Nothing))
           Me.AddMissingQbImports()
           Me.ApplyNameCasing()
+          If Me._settleSavedText Then
+            Me._settleSavedText = False
+            Me._savedText = Me.DocumentBuffer.Text
+          End If
         End Sub)
   End Sub
 

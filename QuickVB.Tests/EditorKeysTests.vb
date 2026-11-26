@@ -448,6 +448,18 @@ Public Class EditorKeysTests
   End Sub
 
   <Fact>
+  Public Sub TheStartingProgramIsNotAskedToBeSaved()
+    Dim s As New Session("")
+
+    s.Do_(Sub() s.Ui.NewProgram())
+    WaitFor(s, Function() s.Ui.EditorView.Buffer.Text.Contains("Imports QB.Video"))   ' the editor adds the import to it
+    WaitFor(s, Function() True)
+
+    s.Do_(Sub() s.Ui.NewProgram())
+    Assert.DoesNotContain("not saved", s.Console.GetText())
+  End Sub
+
+  <Fact>
   Public Sub EnterInTheMiddleOfAHeaderDoesNotWriteAnEnd()
     Dim s As New Session("")
 
