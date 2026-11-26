@@ -390,10 +390,32 @@ Public Class EditorKeysTests
 
     Dim lines = s.Ui.EditorView.Buffer.Lines.Select(Function(l) l.Text).ToList()
     Assert.Contains("Module program", lines(0), StringComparison.OrdinalIgnoreCase)
-    Assert.Equal("    ", lines(1))                    ' the body, one tab stop in
+    Assert.Equal("", lines(1).Trim())                ' the body is a blank line ...
     Assert.Equal("End Module", lines(2))
-    Assert.Equal(1, s.Ui.EditorView.CursorRow)
+    Assert.Equal(1, s.Ui.EditorView.CursorRow)       ' ... with the cursor on it, one tab stop in
     Assert.Equal(4, s.Ui.EditorView.CursorColumn)
+
+    s.Console.QueueText("x")
+    s.Run()
+    Assert.Equal("    x", s.Ui.EditorView.Buffer.Lines(1).Text)
+  End Sub
+
+  <Fact>
+  Public Sub TheMissingEndIsNotReportedOnceEnterHasWrittenIt()
+    Dim s As New Session("")
+
+    s.Console.QueueText("module program")
+    s.Press(VirtualKey.VK_RETURN, character:=Chr(13))
+
+    ' the compile that follows must see the End Module (a stale "must end with a matching End Module" stays until the next edit)
+    Dim limit = Date.UtcNow.AddSeconds(4)
+    Do While Date.UtcNow < limit
+      s.Run()
+      Threading.Thread.Sleep(50)
+    Loop
+
+    Assert.Contains("End Module", s.Ui.EditorView.Buffer.Text)
+    Assert.DoesNotContain("BC30625", s.Console.GetText())
   End Sub
 
   <Fact>

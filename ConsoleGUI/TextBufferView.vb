@@ -1401,8 +1401,11 @@ Namespace ConsoleGUI
           Dim padding = Me.Buffer.Lines(Me.CursorRow).Text.Length - Me.Buffer.Lines(Me.CursorRow).Text.TrimStart(" "c).Length
           Dim truncatedText = Me.Buffer.TruncateText(Me.CursorRow, Me.CursorColumn)
           Me.Buffer.InsertLine(Me.CursorRow + 1, New String(" "c, padding) & truncatedText)
-          Me.MoveCursor(Me.CursorRow + 1, padding)
-          Me.OnLineEntered(Me.CursorRow - 1)
+
+          ' (before the cursor moves: leaving the line is what has it compiled, and that should see the text as it ends up)
+          Dim column = padding
+          Me.OnLineEntered(Me.CursorRow, column)
+          Me.MoveCursor(Me.CursorRow + 1, column)
 
         Case Else
 
@@ -1418,8 +1421,11 @@ Namespace ConsoleGUI
 
     End Sub
 
-    ''' <summary>Called after Enter has split a line: <paramref name="row"/> is the line that was ended, the cursor is on the new one.</summary>
-    Protected Overridable Sub OnLineEntered(row As Integer)
+    ''' <summary>
+    ''' Called when Enter has split a line, before the cursor goes to the new one (at <paramref name="column"/>, which can be changed):
+    ''' <paramref name="row"/> is the line that was ended, the line after it is the new one.
+    ''' </summary>
+    Protected Overridable Sub OnLineEntered(row As Integer, ByRef column As Integer)
     End Sub
 
     Public Sub CharacterEdit(e As KeyEvent, screen As Screen)
