@@ -469,6 +469,29 @@ Public Class EditorKeysTests
   End Sub
 
   <Fact>
+  Public Sub SaveAsProjectWritesAProjectThatImportsWhatTheProgramUses()
+    Dim s As New Session("Module Program" & vbLf & "  Sub Main()" & vbLf & "    PRINT(""hi"")" & vbLf & "  End Sub" & vbLf & "End Module")
+    WaitFor(s, Function() GlobalImports().Contains("QB.Video"))
+
+    Dim folder = IO.Path.Combine(IO.Path.GetTempPath(), "qvb-project-" & Guid.NewGuid().ToString("N"))
+    IO.Directory.CreateDirectory(folder)
+    Try
+      Dim path = IO.Path.Combine(folder, "Hello.vbproj")
+      s.Do_(Sub() s.Ui.WriteProject(path))
+
+      Dim project = IO.File.ReadAllText(path)
+      Assert.Contains("<Import Include=""QB.Video"" />", project)
+      Assert.Contains("<PackageReference Include=""QB.Compatibility"" Version=""", project)
+      Assert.Contains("<OutputType>Exe</OutputType>", project)
+      Assert.DoesNotContain("Sdl", project)
+      Assert.Contains("PRINT", IO.File.ReadAllText(IO.Path.Combine(folder, "Hello.vb")))
+      Assert.DoesNotContain("Imports", IO.File.ReadAllText(IO.Path.Combine(folder, "Hello.vb")))
+    Finally
+      IO.Directory.Delete(folder, True)
+    End Try
+  End Sub
+
+  <Fact>
   Public Sub EnterInTheMiddleOfAHeaderDoesNotWriteAnEnd()
     Dim s As New Session("")
 

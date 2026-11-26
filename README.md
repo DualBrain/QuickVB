@@ -103,11 +103,11 @@ Each of these is described below.
 
 ## QuickBASIC statements
 
-The QuickBASIC and QBasic statements and functions (`PRINT`, `LOCATE`, `CLS`, `OPEN`, `INKEY$`, `SOUND`, `PLAY`, `SCREEN`, `PSET`, ...) come from the [QB.Compatibility](https://github.com/DualBrain/QB.Compatibility) library (version 0.1.2), which QuickVB carries inside itself. Nothing is added to a program until it asks for it: when the code calls a QuickBASIC statement that nothing declares, QuickVB puts the line that imports it at the top of the file (`Imports QB.Video`, or `QB.Graphics` for the drawing statements) and says so on the status line. That line is ordinary code: it stays until you take it out, and QuickVB never takes it out for you.
+The QuickBASIC and QBasic statements and functions (`PRINT`, `LOCATE`, `CLS`, `OPEN`, `INKEY$`, `SOUND`, `PLAY`, `SCREEN`, `PSET`, ...) come from the [QB.Compatibility](https://github.com/DualBrain/QB.Compatibility) library (version 0.1.2), which QuickVB carries inside itself. Nothing is added to a program until it asks for it: when the code calls a QuickBASIC statement that nothing declares, QuickVB imports it for the whole program (`QB.Video`, or `QB.Graphics` for the drawing statements) and says so on the status line. Your source stays as you wrote it: a single `.vb` file with no `Imports` line runs in QuickVB only. **File > Save As Project** writes a `.vbproj` (with the same imports and the QB.Compatibility package) next to the source, and that project builds and runs with `dotnet run` anywhere. A file that has its own `Imports QB.Video` keeps it (and gets `Imports QB.Graphics` in its place when it starts to draw).
 
-* A program that doesn't import a `QB` namespace is compiled against nothing but .NET, and nothing extra is written next to it.
-* A program that imports `QB.Video` (and the other text namespaces) gets `QB.Compatibility.dll` next to it when it is run or made into an EXE.
-* A program that imports `QB.Graphics` also gets `QB.Compatibility.Sdl.dll`, SDL2-CS and the native SDL2 library for the platform QuickVB was built for, and draws in an SDL2 window.
+* A program that doesn't use a `QB` namespace is compiled against nothing but .NET, and nothing extra is written next to it.
+* A program that uses `QB.Video` (and the other text namespaces) gets `QB.Compatibility.dll` next to it when it is run or made into an EXE.
+* A program that uses `QB.Graphics` also gets `QB.Compatibility.Sdl.dll`, SDL2-CS and the native SDL2 library for the platform QuickVB was built for, and draws in an SDL2 window.
 * Under the debugger a small `QuickVB.Runtime.dll` is added to the program as well.
 * A program that draws is built as a Windows program (WinExe) instead of a console one. On Windows, running it (F5) leaves QuickVB's screen as it is: the program has no console, so its text appears in its own window too, and the status line says when it has ended. Make EXE File writes it a launcher with no console window. On Linux and macOS, and under the debugger, a program that draws still runs in the terminal, with its window beside it.
 

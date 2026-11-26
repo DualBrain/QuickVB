@@ -95,6 +95,7 @@ Partial Public Class MyScreen
                                           New MenuItem(Name:="&Save", Action:=Sub() Me.Post(Sub() Me.SaveProgram())),
                                           New MenuItem(Name:="Save &As...", Action:=Sub() Me.Post(AddressOf Me.ShowSaveAsDialog)),
                                           New MenuItem(Name:="Sa&ve All", Action:=Sub() Me.Post(Sub() Me.SaveAll())),
+                                          New MenuItem(Name:="Save As Pro&ject...", Action:=Sub() Me.Post(AddressOf Me.ShowSaveAsProjectDialog)),
                                           New MenuItem(Separator:=True),
                                           New MenuItem(Name:="&Create File...", Action:=Sub() Me.Post(AddressOf Me.ShowCreateFileDialog)),
                                           New MenuItem(Name:="&Load File...", Action:=Sub() Me.Post(AddressOf Me.ShowLoadFileDialog)),

@@ -12,7 +12,7 @@ Imports Microsoft.CodeAnalysis.VisualBasic.Syntax
 ''' The libraries a program written in QuickVB can use, all of them embedded in QuickVB itself:
 ''' QB.Compatibility (the QuickBASIC and QBasic statements: PRINT, LOCATE, OPEN, ...), QB.Compatibility.Sdl with SDL2 (graphics) and
 ''' QuickVB.Runtime (the part of the debugger that runs inside the program).
-''' A program only carries what it uses: QuickVB adds <c>Imports QB.Video</c> (and the like) when the code uses a QuickBASIC statement,
+''' A program only carries what it uses: QuickVB imports QB.Video (and the like) for the program when the code uses a QuickBASIC statement,
 ''' and a library is only written next to the program when the program refers to it.
 ''' </summary>
 Public Module QBLibrary
