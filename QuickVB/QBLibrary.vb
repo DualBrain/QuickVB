@@ -193,6 +193,7 @@ Public Module QBLibrary
 
       Dim root = tree.GetRoot()
       Dim existing = ImportedNames(root)
+      existing.UnionWith(GlobalImportNames(compilation))
       Dim model = compilation.GetSemanticModel(tree)
       Dim needed As New List(Of String)()
 
@@ -280,6 +281,13 @@ Public Module QBLibrary
   Private Function IsImplicitVariable(symbol As ISymbol) As Boolean
     Return symbol.Kind = SymbolKind.Local AndAlso symbol.DeclaringSyntaxReferences.Length = 0 OrElse
            symbol.Kind = SymbolKind.Local AndAlso symbol.IsImplicitlyDeclared
+  End Function
+
+  ''' <summary>The namespaces the program imports as a whole (the project's imports, not a file's).</summary>
+  Friend Function GlobalImportNames(compilation As Compilation) As IEnumerable(Of String)
+    Dim options = TryCast(compilation.Options, VisualBasicCompilationOptions)
+    If options Is Nothing Then Return Enumerable.Empty(Of String)()
+    Return options.GlobalImports.Select(Function(g) g.Clause.ToString().Trim().Replace("Imports ", "")).ToList()
   End Function
 
   Private Function ImportedNames(root As SyntaxNode) As HashSet(Of String)

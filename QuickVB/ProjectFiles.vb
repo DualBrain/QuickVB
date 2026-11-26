@@ -52,6 +52,9 @@ Public Module ProjectFiles
       If value IsNot Nothing Then options.OptionStrict = IsOn(value)
       value = PropertyOf(text, "OptionInfer")
       If value IsNot Nothing Then options.OptionInfer = IsOn(value)
+      For Each match As Match In Regex.Matches(text, "<Import\s+Include\s*=\s*""([^""]+)""", RegexOptions.IgnoreCase)
+        options.GlobalImports.Add(match.Groups(1).Value.Trim())
+      Next
       value = PropertyOf(text, "OptionCompare")
       If value IsNot Nothing Then options.CompareText = String.Equals(value, "Text", StringComparison.OrdinalIgnoreCase)
     Catch ex As Exception When TypeOf ex Is IOException OrElse TypeOf ex Is UnauthorizedAccessException
@@ -137,4 +140,7 @@ Public NotInheritable Class ProgramOptions
 
   ''' <summary>True for Option Compare Text; False (the default) is Option Compare Binary.</summary>
   Public Property CompareText As Boolean = False
+
+  ''' <summary>The namespaces the project imports for all its files (<c>&lt;Import Include="..." /&gt;</c>).</summary>
+  Public Property GlobalImports As New List(Of String)()
 End Class

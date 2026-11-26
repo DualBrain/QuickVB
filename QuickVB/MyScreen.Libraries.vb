@@ -8,7 +8,8 @@ Partial Public Class MyScreen
 
   ''' <summary>
   ''' When the code in an editor calls a QuickBASIC statement (LOCATE, CLS, ...) that nothing declares, the QB namespace that has it is imported
-  ''' at the top of the file (<c>Imports QB.Video</c>). Nothing takes the line out again: it is ordinary code that stays until the person removes it.
+  ''' for the whole program (the project's imports: the source is not touched, and a project written out for it carries the same imports).
+  ''' A file that has its own <c>Imports QB.Video</c> and needs QB.Graphics has that line changed instead, so the two are never both in effect.
   ''' </summary>
   Private Sub AddMissingQbImports()
 
@@ -17,6 +18,8 @@ Partial Public Class MyScreen
     If missing Is Nothing OrElse missing.Count = 0 Then Return
 
     workspace.MissingQbImports = New Dictionary(Of String, List(Of String))()
+
+    Dim forProgram As New List(Of String)()
 
     For Each slot In Me.EditorSlots()
 
@@ -30,30 +33,30 @@ Partial Public Class MyScreen
 
       ' QB.Graphics replaces QB.Video (it has all of it; having both makes SCREEN and the like ambiguous)
       Dim video = If(needed.Contains("QB.Graphics"), VideoImportRow(buffer), -1)
-      Dim row = ImportsRow(buffer)
-      Dim cursorRow = view.CursorRow
-      Dim cursorColumn = view.CursorColumn
-
-      view.Edit(Sub()
-                  If video >= 0 Then
+      If video >= 0 Then
+        view.Edit(Sub()
                     buffer.RemoveLine(video)
                     buffer.InsertLine(video, "Imports QB.Graphics")
-                    needed = needed.Where(Function(n) n <> "QB.Graphics").ToList()
-                  End If
-                  For Each name In needed
-                    buffer.InsertLine(row, "Imports " & name)
-                    row += 1
-                  Next
-                End Sub)
+                  End Sub)
+        needed = needed.Where(Function(n) n <> "QB.Graphics").ToList()
+        Me.SetStatus("Changed Imports QB.Video to Imports QB.Graphics", False)
+        Me.RefreshDocument(buffer)
+      End If
 
-      ' the cursor stays on the text it was on
-      Dim firstRow = row - needed.Count
-      If cursorRow >= firstRow Then view.MoveCursor(cursorRow + needed.Count, cursorColumn)
-
-      Me.SetStatus("Added " & String.Join(", ", needed.Select(Function(n) "Imports " & n)), False)
-      Me.RefreshDocument(buffer)
+      For Each name In needed
+        If Not forProgram.Contains(name) Then forProgram.Add(name)
+      Next
 
     Next
+
+    ' the files that were not changed ask the compiler again once the program imports what they use
+    If forProgram.Count = 0 Then Return
+
+    Dim added = workspace.AddGlobalImports(forProgram)
+    If added.Count = 0 Then Return
+
+    Me.SetStatus("The program imports " & String.Join(", ", added), False)
+    Me.OnLineCommit(Me.DocumentBuffer)
 
   End Sub
 

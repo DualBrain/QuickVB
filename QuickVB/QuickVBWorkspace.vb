@@ -72,8 +72,7 @@ Public Class QuickVBWorkspace
     Dim projId = ProjectId.CreateNewId(name)
     Dim metadataReferences = GetMetadataReferences()
     Dim opts As New VisualBasic.VisualBasicCompilationOptions(OutputKind.ConsoleApplication,
-                                                              globalImports:=VisualBasic.GlobalImport.Parse({"System",
-                                                                                                             "Microsoft.VisualBasic"}),
+                                                              globalImports:=VisualBasic.GlobalImport.Parse({"System", "Microsoft.VisualBasic"}.Concat(programOptions.GlobalImports)),
                                                               optionExplicit:=programOptions.OptionExplicit,
                                                               optionCompareText:=programOptions.CompareText,
                                                               optionStrict:=If(programOptions.OptionStrict, VisualBasic.OptionStrict.On, VisualBasic.OptionStrict.Off),
@@ -122,6 +121,32 @@ Public Class QuickVBWorkspace
   Public Function GetProgramDocumentText(name As String) As String
     Dim document = Me.ProgramProject().Documents.FirstOrDefault(Function(d) d.Name = name)
     Return If(document Is Nothing, Nothing, document.GetTextAsync().Result.ToString())
+  End Function
+
+  ''' <summary>
+  ''' Imports namespaces for the whole program (what a project says with <c>&lt;Import Include="QB.Video" /&gt;</c>), so that the files need no
+  ''' Imports line of their own. QB.Graphics replaces QB.Video (it has all of it; having both makes SCREEN and the like ambiguous).
+  ''' Returns the names that were added.
+  ''' </summary>
+  Public Function AddGlobalImports(names As IEnumerable(Of String)) As List(Of String)
+
+    Dim project = Me.ProgramProject()
+    Dim options = CType(project.CompilationOptions, VisualBasicCompilationOptions)
+    Dim current = options.GlobalImports.Select(Function(g) g.Clause.ToString().Trim()).ToList()
+    Dim added As New List(Of String)()
+
+    For Each name In names
+      If current.Contains(name, StringComparer.OrdinalIgnoreCase) Then Continue For
+      If name = "QB.Video" AndAlso current.Contains("QB.Graphics", StringComparer.OrdinalIgnoreCase) Then Continue For
+      If name = "QB.Graphics" Then current.RemoveAll(Function(c) String.Equals(c, "QB.Video", StringComparison.OrdinalIgnoreCase))
+      current.Add(name)
+      added.Add(name)
+    Next
+
+    If added.Count > 0 Then Me.OnCompilationOptionsChanged(project.Id, options.WithGlobalImports(VisualBasic.GlobalImport.Parse(current)))
+
+    Return added
+
   End Function
 
   ''' <summary>Chooses the module or class whose Main starts the program (Nothing: let the compiler find the only Main).</summary>

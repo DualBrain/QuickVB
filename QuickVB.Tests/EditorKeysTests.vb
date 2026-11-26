@@ -346,16 +346,25 @@ Public Class EditorKeysTests
   End Sub
 
   <Fact>
-  Public Sub UsingAQuickBasicStatementAddsItsImport()
-    Dim s As New Session("Module M" & vbLf & "  Sub Main()" & vbLf & "    CLS()" & vbLf & "  End Sub" & vbLf & "End Module")
+  Public Sub UsingAQuickBasicStatementImportsItForTheProgram()
+    Dim source = "Module M" & vbLf & "  Sub Main()" & vbLf & "    CLS()" & vbLf & "  End Sub" & vbLf & "End Module"
+    Dim s As New Session(source)
 
-    WaitFor(s, Function() s.Ui.EditorView.Buffer.Text.Contains("Imports QB.Video"))
+    WaitFor(s, Function() GlobalImports().Contains("QB.Video"))
+    WaitFor(s, Function() s.Console.GetText().Contains("The program imports QB.Video"))
 
-    Dim lines = s.Ui.EditorView.Buffer.Lines.Select(Function(l) l.Text).ToList()
-    Assert.Equal("Imports QB.Video", lines(0))
-    Assert.Equal("Module M", lines(1))
-    Assert.Contains("Added Imports QB.Video", s.Console.GetText())
+    ' no line is added to the source
+    Assert.DoesNotContain("Imports", s.Ui.EditorView.Buffer.Text)
+
+    ' and it builds as it is
+    Dim errors = App.TheWorkspace.BuildProgram().Where(Function(d) d.Severity = Microsoft.CodeAnalysis.DiagnosticSeverity.Error).ToList()
+    Assert.True(errors.Count = 0, String.Join(vbLf, errors))
   End Sub
+
+  Private Shared Function GlobalImports() As List(Of String)
+    Dim options = CType(App.TheWorkspace.CurrentSolution.Projects.First().CompilationOptions, Microsoft.CodeAnalysis.VisualBasic.VisualBasicCompilationOptions)
+    Return options.GlobalImports.Select(Function(g) g.Clause.ToString().Trim()).ToList()
+  End Function
 
   <Fact>
   Public Sub AProgramThatDrawsGetsGraphicsInPlaceOfVideo()
@@ -372,7 +381,7 @@ Public Class EditorKeysTests
   Public Sub ALowerCaseProgramIsWrittenWithTheCasingOfQuickBasic()
     Dim s As New Session("module program" & vbLf & "sub Main" & vbLf & "print(""hi"")" & vbLf & "end sub" & vbLf & "end module")
 
-    WaitFor(s, Function() s.Ui.EditorView.Buffer.Text.Contains("PRINT(") AndAlso s.Ui.EditorView.Buffer.Text.Contains("Imports QB.Video"))
+    WaitFor(s, Function() s.Ui.EditorView.Buffer.Text.Contains("PRINT(") AndAlso GlobalImports().Contains("QB.Video"))
 
     Dim text = s.Ui.EditorView.Buffer.Text
     Assert.Contains("Module program", text)
@@ -452,7 +461,7 @@ Public Class EditorKeysTests
     Dim s As New Session("")
 
     s.Do_(Sub() s.Ui.NewProgram())
-    WaitFor(s, Function() s.Ui.EditorView.Buffer.Text.Contains("Imports QB.Video"))   ' the editor adds the import to it
+    WaitFor(s, Function() GlobalImports().Contains("QB.Video"))   ' the program imports what it uses
     WaitFor(s, Function() True)
 
     s.Do_(Sub() s.Ui.NewProgram())
@@ -483,23 +492,23 @@ Public Class EditorKeysTests
   End Sub
 
   <Fact>
-  Public Sub TheImportGoesBelowTheOptionAndImportsLinesThereAlready()
-    Dim s As New Session("Option Explicit On" & vbLf & "Imports System" & vbLf & vbLf & "Module M" & vbLf & "  Sub Main()" & vbLf & "    LOCATE(1, 1)" & vbLf & "  End Sub" & vbLf & "End Module")
+  Public Sub AProgramThatDrawsImportsGraphicsForTheProgramInPlaceOfVideo()
+    Dim s As New Session("Module M" & vbLf & "  Sub Main()" & vbLf & "    CLS()" & vbLf & "    SCREEN(9)" & vbLf & "  End Sub" & vbLf & "End Module")
 
-    WaitFor(s, Function() s.Ui.EditorView.Buffer.Text.Contains("Imports QB.Video"))
+    WaitFor(s, Function() GlobalImports().Contains("QB.Graphics"))
 
-    Dim lines = s.Ui.EditorView.Buffer.Lines.Select(Function(l) l.Text).ToList()
-    Assert.Equal("Imports System", lines(1))
-    Assert.Equal("Imports QB.Video", lines(2))
+    Assert.DoesNotContain("QB.Video", GlobalImports())
+    Assert.DoesNotContain("Imports QB", s.Ui.EditorView.Buffer.Text)
   End Sub
 
   <Fact>
-  Public Sub ARemovedImportIsNotAddedAgainUntilTheStatementIsUsedAgain()
+  Public Sub AProgramThatUsesNothingOfQuickBasicImportsNothing()
     Dim s As New Session("Module M" & vbLf & "  Sub Main()" & vbLf & "  End Sub" & vbLf & "End Module")
     s.Run()
     Threading.Thread.Sleep(500)
     s.Run()
 
+    Assert.DoesNotContain("QB.Video", GlobalImports())
     Assert.DoesNotContain("Imports QB", s.Ui.EditorView.Buffer.Text)
   End Sub
 
