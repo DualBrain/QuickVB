@@ -116,7 +116,7 @@ Public Class OpenProgramTests
   End Sub
 
   <Fact>
-  Public Sub EnterClearsTheWelcomeBoxAndExplainsThatTheSurvivalGuideIsNotThereYet()
+  Public Sub EnterClearsTheWelcomeBoxAndOpensTheSurvivalGuide()
     Dim console As New HeadlessConsole(80, 25)
     Dim ui = StartScreenWithWelcome(console)
 
@@ -125,7 +125,8 @@ Public Class OpenProgramTests
 
     Assert.Null(ui.PopupControl)
     Assert.DoesNotContain("Welcome to QuickVB", console.GetText())
-    Assert.Contains("Survival Guide is not available", console.RowText(24))
+    Assert.Contains("QuickVB Survival Guide", console.GetText())
+    Assert.DoesNotContain("not available", console.GetText())
   End Sub
 
   <Fact>

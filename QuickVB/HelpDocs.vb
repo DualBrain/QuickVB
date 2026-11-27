@@ -121,6 +121,7 @@ Public Module HelpDocs
   Private Function TargetOf(target As String) As String
 
     If target.StartsWith("https://", StringComparison.OrdinalIgnoreCase) Then Return target
+    If target = AlphabeticalId OrElse target = VbCategoriesId OrElse target = QbCategoriesId OrElse HelpContent.Order.Contains(target) Then Return target
 
     Dim key = StatementHelp.Key(target)
     Dim alias_ As String = Nothing

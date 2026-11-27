@@ -721,7 +721,7 @@ Partial Public Class MyScreen
                                                        "Copyright (C) Dartmouth Didn't, 1964-2026.",
                                                        "All rights reserved."}
 
-    Me.WelcomeDialog.Show(Me, onEnter:=Sub() Me.SetStatus("The Survival Guide is not available yet.", True))
+    Me.WelcomeDialog.Show(Me, onEnter:=Sub() Me.ShowHelp(HelpDocs.TopicIdOf("survival-guide")))
 
   End Sub
 

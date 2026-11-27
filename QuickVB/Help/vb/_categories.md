@@ -1,5 +1,7 @@
 # Visual Basic Keywords
 
+New to QuickVB? Read the [Survival Guide](SURVIVAL-GUIDE).
+
 ## Control Flow
 
 * [IF...THEN...ELSE](IF-THEN-ELSE)
